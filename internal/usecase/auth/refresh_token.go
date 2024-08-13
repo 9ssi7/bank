@@ -54,9 +54,6 @@ func NewRefreshTokenUseCase(v validation.Service, tokenSrv token.Srv, sessionRep
 		if err != nil {
 			return nil, rescode.Failed(err)
 		}
-		if err != nil {
-			return nil, err
-		}
 		session.Refresh(accessToken)
 		if err := sessionRepo.Save(ctx, user.Id, session); err != nil {
 			return nil, err

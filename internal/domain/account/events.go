@@ -1,5 +1,10 @@
 package account
 
+const (
+	SubjectTransferIncoming = "Account.TransferIncoming"
+	SubjectTransferOutgoing = "Account.TransferOutgoing"
+)
+
 type EventTranfserIncoming struct {
 	Email       string `json:"email"`
 	Name        string `json:"name"`

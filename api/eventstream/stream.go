@@ -3,6 +3,7 @@ package eventstream
 import (
 	"context"
 
+	"github.com/9ssi7/bank/internal/domain/account"
 	"github.com/9ssi7/bank/internal/domain/auth"
 	"github.com/9ssi7/bank/internal/domain/user"
 	"github.com/9ssi7/bank/internal/infra/eventer"
@@ -43,8 +44,8 @@ func (s *srv) Listen() error {
 		ctx,
 		eventHandler{auth.SubjectLoginStarted, s.cnf.AuthStartLoginHandler},
 		eventHandler{user.SubjectCreated, s.cnf.UserCreatedHandler},
-		eventHandler{"Transfer.Incoming", s.cnf.TransferIncomeHandler},
-		eventHandler{"Transfer.Outgoing", s.cnf.TransferOutgoingHandler},
+		eventHandler{account.SubjectTransferIncoming, s.cnf.TransferIncomeHandler},
+		eventHandler{account.SubjectTransferOutgoing, s.cnf.TransferOutgoingHandler},
 	)
 	if err != nil {
 		return err

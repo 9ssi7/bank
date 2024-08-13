@@ -39,11 +39,14 @@ func NewRegisterUseCase(v validation.Service, userRepo user.Repo, eventer evente
 		if err != nil {
 			return nil, err
 		}
-		eventer.Publish(ctx, user.SubjectCreated, &user.EventCreated{
+		err = eventer.Publish(ctx, user.SubjectCreated, &user.EventCreated{
 			Name:      u.Name,
 			Email:     u.Email,
 			TempToken: *u.TempToken,
 		})
+		if err != nil {
+			return nil, err
+		}
 		return &RegisterRes{}, nil
 	}
 }

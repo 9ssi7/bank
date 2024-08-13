@@ -19,4 +19,7 @@ var (
 	InvalidRefreshOrAccessTokens = rescode.New(3003, http.StatusForbidden, "invalid_refresh_or_access_tokens", rescode.R{
 		"isInvalid": true,
 	})
+	InvalidAccess = rescode.New(3004, http.StatusForbidden, "invalid_access", rescode.R{
+		"isInvalid": true,
+	})
 )

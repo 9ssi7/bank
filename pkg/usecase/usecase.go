@@ -7,7 +7,7 @@ import (
 )
 
 // UseCase is the interface for usecase
-type Handler[Req any, Res any] func(ctx context.Context, trace trace.Tracer, req Req) (Res, error)
+type Handler[Req any, Res any] func(ctx context.Context, tracer trace.Tracer, req Req) (Res, error)
 
 func Push(ctx context.Context, tracer trace.Tracer, name string) context.Context {
 	ctx, span := tracer.Start(ctx, name)

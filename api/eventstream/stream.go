@@ -3,6 +3,8 @@ package eventstream
 import (
 	"context"
 
+	"github.com/9ssi7/bank/internal/domain/auth"
+	"github.com/9ssi7/bank/internal/infra/eventer"
 	"github.com/9ssi7/bank/pkg/events"
 	"github.com/9ssi7/bank/pkg/server"
 	"github.com/nats-io/nats.go"
@@ -10,16 +12,15 @@ import (
 )
 
 type srv struct {
-	nc  *nats.Conn
-	js  nats.JetStreamContext
-	cnf Config
+	eventer eventer.Srv
+	cnf     Config
 
 	subs []*nats.Subscription
 }
 
 type Config struct {
-	StreamUrl string
-	Tracer    trace.Tracer
+	Eventer eventer.Srv
+	Tracer  trace.Tracer
 
 	AuthStartLoginHandler   events.Handler
 	UserCreatedHandler      events.Handler
@@ -27,51 +28,25 @@ type Config struct {
 	TransferOutgoingHandler events.Handler
 }
 
-func New(cnf Config) (server.Listener, error) {
-	nc, err := nats.Connect(cnf.StreamUrl)
-	if err != nil {
-		return nil, err
-	}
-	js, err := nc.JetStream()
-	if err != nil {
-		return nil, err
-	}
+func New(cnf Config) server.Listener {
 	return &srv{
-		nc:  nc,
-		js:  js,
-		cnf: cnf,
-
-		subs: make([]*nats.Subscription, 0),
-	}, nil
+		eventer: cnf.Eventer,
+		cnf:     cnf,
+		subs:    make([]*nats.Subscription, 0),
+	}
 }
 
 func (s *srv) Listen() error {
 	ctx := context.Background()
 	err := s.addSub(
 		ctx,
-		eHandler{"Auth.LoginStarted", s.cnf.AuthStartLoginHandler},
-		eHandler{"User.Created", s.cnf.UserCreatedHandler},
-		eHandler{"Transfer.Incoming", s.cnf.TransferIncomeHandler},
-		eHandler{"Transfer.Outgoing", s.cnf.TransferOutgoingHandler},
+		eventHandler{auth.SubjectLoginStarted, s.cnf.AuthStartLoginHandler},
+		eventHandler{"User.Created", s.cnf.UserCreatedHandler},
+		eventHandler{"Transfer.Incoming", s.cnf.TransferIncomeHandler},
+		eventHandler{"Transfer.Outgoing", s.cnf.TransferOutgoingHandler},
 	)
 	if err != nil {
 		return err
-	}
-	return nil
-}
-
-type eHandler struct {
-	subject string
-	handler events.Handler
-}
-
-func (s *srv) addSub(ctx context.Context, handlers ...eHandler) error {
-	for _, p := range handlers {
-		sub, err := events.RegisterHandler(ctx, s.cnf.Tracer, s.js, p.subject, p.handler)
-		if err != nil {
-			return err
-		}
-		s.subs = append(s.subs, sub)
 	}
 	return nil
 }
@@ -80,6 +55,22 @@ func (s *srv) Shutdown(ctx context.Context) error {
 	for _, sub := range s.subs {
 		sub.Unsubscribe()
 	}
-	s.nc.Close()
+	s.eventer.Disconnect(ctx)
+	return nil
+}
+
+type eventHandler struct {
+	subject string
+	handler events.Handler
+}
+
+func (s *srv) addSub(ctx context.Context, handlers ...eventHandler) error {
+	for _, p := range handlers {
+		sub, err := events.RegisterHandler(ctx, s.cnf.Tracer, s.eventer.GetClient(), p.subject, p.handler)
+		if err != nil {
+			return err
+		}
+		s.subs = append(s.subs, sub)
+	}
 	return nil
 }

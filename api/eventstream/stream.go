@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/9ssi7/bank/internal/domain/auth"
+	"github.com/9ssi7/bank/internal/domain/user"
 	"github.com/9ssi7/bank/internal/infra/eventer"
 	"github.com/9ssi7/bank/pkg/events"
 	"github.com/9ssi7/bank/pkg/server"
@@ -41,7 +42,7 @@ func (s *srv) Listen() error {
 	err := s.addSub(
 		ctx,
 		eventHandler{auth.SubjectLoginStarted, s.cnf.AuthStartLoginHandler},
-		eventHandler{"User.Created", s.cnf.UserCreatedHandler},
+		eventHandler{user.SubjectCreated, s.cnf.UserCreatedHandler},
 		eventHandler{"Transfer.Incoming", s.cnf.TransferIncomeHandler},
 		eventHandler{"Transfer.Outgoing", s.cnf.TransferOutgoingHandler},
 	)

@@ -4,16 +4,12 @@ import (
 	"context"
 
 	"github.com/9ssi7/bank/pkg/list"
-	"github.com/9ssi7/txn"
+	"github.com/9ssi7/bank/pkg/txadapter"
 	"github.com/google/uuid"
 )
 
-type TxnAdapterRepo interface {
-	GetTxnAdapter() txn.Adapter
-}
-
 type Repo interface {
-	TxnAdapterRepo
+	txadapter.Repo
 
 	Save(ctx context.Context, account *Account) error
 	ListByUserId(ctx context.Context, userId uuid.UUID, pagi *list.PagiRequest) (*list.PagiResponse[*Account], error)
@@ -23,7 +19,7 @@ type Repo interface {
 }
 
 type TransactionRepo interface {
-	TxnAdapterRepo
+	txadapter.Repo
 
 	Save(ctx context.Context, transaction *Transaction) error
 	Filter(ctx context.Context, accountId uuid.UUID, pagi *list.PagiRequest, filters *TransactionFilters) (*list.PagiResponse[*Transaction], error)

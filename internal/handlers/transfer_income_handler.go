@@ -2,28 +2,29 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/9ssi7/bank/assets"
-	"github.com/9ssi7/bank/internal/domain/auth"
+	"github.com/9ssi7/bank/internal/domain/account"
 	"github.com/9ssi7/bank/internal/infra/mail"
 	"github.com/9ssi7/bank/pkg/cancel"
 	"github.com/9ssi7/bank/pkg/events"
 	"github.com/nats-io/nats.go"
 )
 
-type authStartLoginHandler struct {
+type transferIncomeHandler struct {
 	mailSrv mail.Srv
 }
 
-func NewAuthStartLoginHandler(mailSrv mail.Srv) events.Handler {
-	return &authStartLoginHandler{
+func NewTransferIncomeHandler(mailSrv mail.Srv) events.Handler {
+	return &transferIncomeHandler{
 		mailSrv: mailSrv,
 	}
 }
 
-func (h *authStartLoginHandler) Handle(ctx context.Context, msg *nats.Msg) error {
-	var event auth.EventLoginStarted
+func (h *transferIncomeHandler) Handle(ctx context.Context, msg *nats.Msg) error {
+	var event account.EventTranfserIncoming
 	if err := events.ParseJson(msg, &event); err != nil {
 		return err
 	}
@@ -31,15 +32,14 @@ func (h *authStartLoginHandler) Handle(ctx context.Context, msg *nats.Msg) error
 		return h.mailSrv.SendWithTemplate(ctx, mail.SendWithTemplateConfig{
 			SendConfig: mail.SendConfig{
 				To:      []string{event.Email},
-				Subject: "Verify your session",
-				Message: event.Code,
+				Subject: "Incoming transaction",
 			},
-			Template: assets.Templates.AuthVerify,
+			Template: assets.Templates.TransferIncoming,
 			Data: map[string]interface{}{
-				"Code":    event.Code,
-				"IP":      mail.GetField(event.Device.IP),
-				"Browser": mail.GetField(event.Device.Name),
-				"OS":      mail.GetField(event.Device.OS),
+				"Name":        event.Name,
+				"Amount":      fmt.Sprintf("%s %s", mail.GetField(event.Amount), event.Currency),
+				"Account":     mail.GetField(event.Account),
+				"Description": mail.GetField(event.Description),
 			},
 		})
 	})

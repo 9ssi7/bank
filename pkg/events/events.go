@@ -11,7 +11,7 @@ import (
 
 // Handler is a function that processes a message.
 type Handler interface {
-	Handle(ctx context.Context, tracer trace.Tracer, msg *nats.Msg) error
+	Handle(ctx context.Context, msg *nats.Msg) error
 }
 
 // ParseJson parses the JSON data in the message into the given interface.
@@ -27,7 +27,7 @@ func RegisterHandler(ctx context.Context, tracer trace.Tracer, js nats.JetStream
 	return js.Subscribe(subject, func(msg *nats.Msg) {
 		ctx, span := tracer.Start(ctx, msg.Subject, trace.WithTimestamp(time.Now()))
 		defer span.End()
-		err := h.Handle(ctx, tracer, msg)
+		err := h.Handle(ctx, msg)
 		if err != nil {
 			span.RecordError(err)
 		}

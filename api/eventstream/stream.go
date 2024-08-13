@@ -21,7 +21,10 @@ type Config struct {
 	StreamUrl string
 	Tracer    trace.Tracer
 
-	AuthStartLoginHandler events.Handler
+	AuthStartLoginHandler   events.Handler
+	UserCreatedHandler      events.Handler
+	TransferIncomeHandler   events.Handler
+	TransferOutgoingHandler events.Handler
 }
 
 func New(cnf Config) (server.Listener, error) {
@@ -46,7 +49,10 @@ func (s *srv) Listen() error {
 	ctx := context.Background()
 	err := s.addSub(
 		ctx,
-		eHandler{"Auth.Login.Started", s.cnf.AuthStartLoginHandler},
+		eHandler{"Auth.LoginStarted", s.cnf.AuthStartLoginHandler},
+		eHandler{"User.Created", s.cnf.UserCreatedHandler},
+		eHandler{"Transfer.Incoming", s.cnf.TransferIncomeHandler},
+		eHandler{"Transfer.Outgoing", s.cnf.TransferOutgoingHandler},
 	)
 	if err != nil {
 		return err

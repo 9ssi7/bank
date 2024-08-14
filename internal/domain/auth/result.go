@@ -28,4 +28,7 @@ var (
 	InvalidRefreshToken = rescode.New(3006, http.StatusForbidden, "invalid_refresh_token", rescode.R{
 		"isInvalid": true,
 	})
+	Unauthorized = rescode.New(3007, http.StatusForbidden, "unauthorized", rescode.R{
+		"isUnauthorized": true,
+	})
 )

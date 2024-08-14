@@ -255,8 +255,8 @@ func (u *AuthUseCase) VerifyAccess(ctx context.Context, trc trace.Tracer, access
 	return claims, nil
 }
 
-func (u *AuthUseCase) RefreshVerify(ctx context.Context, trc trace.Tracer, accessTkn, refreshTkn, ipAddr string) (*token.UserClaim, error) {
-	ctx, span := trc.Start(ctx, "AuthUseCase.RefreshVerify")
+func (u *AuthUseCase) VerifyRefresh(ctx context.Context, trc trace.Tracer, accessTkn, refreshTkn, ipAddr string) (*token.UserClaim, error) {
+	ctx, span := trc.Start(ctx, "AuthUseCase.VerifyRefresh")
 	defer span.End()
 	claims, err := u.tokenSrv.Parse(ctx, refreshTkn)
 	if err != nil {

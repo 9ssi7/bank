@@ -1,6 +1,7 @@
 package token
 
 import (
+	"context"
 	"os"
 	"testing"
 
@@ -64,7 +65,7 @@ func TestToken(t *testing.T) {
 			Name:  "Test User",
 			Email: "test@example.com",
 		}
-		accessToken, err := service.GenerateAccessToken(user)
+		accessToken, err := service.GenerateAccessToken(context.Background(), user)
 		if err != nil {
 			t.Errorf("GenerateAccessToken() error = %v", err)
 			return
@@ -80,7 +81,7 @@ func TestToken(t *testing.T) {
 			Name:  "Test User",
 			Email: "test@example.com",
 		}
-		refreshToken, err := service.GenerateRefreshToken(user)
+		refreshToken, err := service.GenerateRefreshToken(context.Background(), user)
 		if err != nil {
 			t.Errorf("GenerateRefreshToken() error = %v", err)
 			return
@@ -91,32 +92,32 @@ func TestToken(t *testing.T) {
 	})
 
 	t.Run("TokenParse", func(t *testing.T) {
-		token, err := service.GenerateAccessToken(User{Id: uuid.New()})
+		token, err := service.GenerateAccessToken(context.Background(), User{Id: uuid.New()})
 		if err != nil {
 			t.Fatal(err)
 		}
-		_, err = service.Parse(token)
+		_, err = service.Parse(context.Background(), token)
 		if err != nil {
 			t.Errorf("Parse() error = %v", err)
 		}
 	})
 
 	t.Run("TokenVerify", func(t *testing.T) {
-		token, err := service.GenerateAccessToken(User{Id: uuid.New()})
+		token, err := service.GenerateAccessToken(context.Background(), User{Id: uuid.New()})
 		if err != nil {
 			t.Fatal(err)
 		}
-		if _, err := service.Verify(token); err != nil {
+		if _, err := service.Verify(context.Background(), token); err != nil {
 			t.Errorf("Verify() error = %v", err)
 		}
 	})
 
 	t.Run("TokenVerifyAndParse", func(t *testing.T) {
-		token, err := service.GenerateAccessToken(User{Id: uuid.New()})
+		token, err := service.GenerateAccessToken(context.Background(), User{Id: uuid.New()})
 		if err != nil {
 			t.Fatal(err)
 		}
-		_, err = service.VerifyAndParse(token)
+		_, err = service.VerifyAndParse(context.Background(), token)
 		if err != nil {
 			t.Errorf("VerifyAndParse() error = %v", err)
 		}

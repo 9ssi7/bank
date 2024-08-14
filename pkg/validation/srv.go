@@ -13,17 +13,12 @@ import (
 	"github.com/google/uuid"
 )
 
-type Service interface {
-	ValidateStruct(ctx context.Context, sc interface{}) error
-	ValidateMap(ctx context.Context, m map[string]interface{}, rules map[string]interface{}) error
-}
-
-type srv struct {
+type Srv struct {
 	validator *validator.Validate
 	uni       *ut.UniversalTranslator
 }
 
-func New() Service {
+func New() *Srv {
 	v := validator.New()
 	v.RegisterCustomTypeFunc(validateUUID, uuid.UUID{})
 	_ = v.RegisterValidation("username", validateUserName)
@@ -34,11 +29,11 @@ func New() Service {
 	_ = v.RegisterValidation("phone", validatePhone)
 	_ = v.RegisterValidation("currency", validateCurrency)
 	_ = v.RegisterValidation("amount", validateAmount)
-	return &srv{validator: v, uni: ut.New(tr.New(), en.New())}
+	return &Srv{validator: v, uni: ut.New(tr.New(), en.New())}
 }
 
 // ValidateStruct validates the given struct.
-func (s *srv) ValidateStruct(ctx context.Context, sc interface{}) error {
+func (s *Srv) ValidateStruct(ctx context.Context, sc interface{}) error {
 	var errors []*ErrorResponse
 	translator := s.getTranslator(ctx)
 	err := s.validator.StructCtx(ctx, sc)
@@ -62,7 +57,7 @@ func (s *srv) ValidateStruct(ctx context.Context, sc interface{}) error {
 }
 
 // ValidateMap validates the giveb struct.
-func (s *srv) ValidateMap(ctx context.Context, m map[string]interface{}, rules map[string]interface{}) error {
+func (s *Srv) ValidateMap(ctx context.Context, m map[string]interface{}, rules map[string]interface{}) error {
 	var errors []*ErrorResponse
 	errMap := s.validator.ValidateMapCtx(ctx, m, rules)
 	translator := s.getTranslator(ctx)
@@ -88,7 +83,7 @@ func (s *srv) ValidateMap(ctx context.Context, m map[string]interface{}, rules m
 	return nil
 }
 
-func (s *srv) getTranslator(ctx context.Context) ut.Translator {
+func (s *Srv) getTranslator(ctx context.Context) ut.Translator {
 	locale := state.GetLocale(ctx)
 	translator, found := s.uni.GetTranslator(locale)
 	if !found {
@@ -97,7 +92,7 @@ func (s *srv) getTranslator(ctx context.Context) ut.Translator {
 	return translator
 }
 
-func (s *srv) mapStructNamespace(ns string) string {
+func (s *Srv) mapStructNamespace(ns string) string {
 	str := strings.Split(ns, ".")
 	return strings.Join(str[1:], ".")
 }

@@ -13,3 +13,9 @@ func (r *syncRepo) Lock() {
 func (r *syncRepo) Unlock() {
 	r.mu.Unlock()
 }
+
+func newSyncRepo() syncRepo {
+	return syncRepo{
+		mu: sync.Mutex{},
+	}
+}

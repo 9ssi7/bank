@@ -21,6 +21,16 @@ const (
 	StatusSuspended Status = "suspended"
 )
 
+type AccountListItem struct {
+	Id       uuid.UUID `json:"id"`
+	Name     string    `json:"name"`
+	Owner    string    `json:"owner"`
+	Iban     string    `json:"iban"`
+	Currency string    `json:"currency"`
+	Balance  string    `json:"balance"`
+	Status   string    `json:"status"`
+}
+
 type Account struct {
 	Id     uuid.UUID `json:"id"`
 	UserId uuid.UUID `json:"user_id"`

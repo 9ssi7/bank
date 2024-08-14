@@ -7,27 +7,20 @@ import (
 	"github.com/nats-io/nats.go"
 )
 
-type Srv interface {
-	Publish(ctx context.Context, sub string, data interface{}) error
-	Connect(ctx context.Context) error
-	Disconnect(ctx context.Context)
-	GetClient() nats.JetStreamContext
-}
-
-type srv struct {
+type Srv struct {
 	nc *nats.Conn
 	js nats.JetStreamContext
 
 	streamUrl string
 }
 
-func New(streamUrl string) Srv {
-	return &srv{
+func New(streamUrl string) *Srv {
+	return &Srv{
 		streamUrl: streamUrl,
 	}
 }
 
-func (s *srv) Connect(ctx context.Context) error {
+func (s *Srv) Connect(ctx context.Context) error {
 	nc, err := nats.Connect(s.streamUrl)
 	if err != nil {
 		return err
@@ -41,11 +34,11 @@ func (s *srv) Connect(ctx context.Context) error {
 	return nil
 }
 
-func (s *srv) Disconnect(ctx context.Context) {
+func (s *Srv) Disconnect(ctx context.Context) {
 	s.nc.Close()
 }
 
-func (s *srv) Publish(ctx context.Context, sub string, data interface{}) error {
+func (s *Srv) Publish(ctx context.Context, sub string, data interface{}) error {
 	p, err := json.Marshal(data)
 	if err != nil {
 		return err
@@ -53,6 +46,6 @@ func (s *srv) Publish(ctx context.Context, sub string, data interface{}) error {
 	return s.nc.Publish(sub, p)
 }
 
-func (s *srv) GetClient() nats.JetStreamContext {
+func (s *Srv) GetClient() nats.JetStreamContext {
 	return s.js
 }

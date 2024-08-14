@@ -1,6 +1,7 @@
 package token
 
 import (
+	"context"
 	"crypto/rsa"
 	"fmt"
 	"time"
@@ -76,7 +77,7 @@ func (j *Jwt) SignWithJWtClaims(p jwt.Claims) (string, error) {
 	return token.SignedString(j.privateKey)
 }
 
-func (j *Jwt) Parse(t string, options ...jwt.ParserOption) (*jwt.Token, error) {
+func (j *Jwt) Parse(ctx context.Context, t string, options ...jwt.ParserOption) (*jwt.Token, error) {
 	return jwt.ParseWithClaims(t, &UserClaim{}, func(token *jwt.Token) (interface{}, error) {
 		if err := j.customLogic(token); err != nil {
 			return nil, err
@@ -85,8 +86,8 @@ func (j *Jwt) Parse(t string, options ...jwt.ParserOption) (*jwt.Token, error) {
 	}, options...)
 }
 
-func (j *Jwt) Verify(t string) (bool, error) {
-	token, err := j.Parse(t)
+func (j *Jwt) Verify(ctx context.Context, t string) (bool, error) {
+	token, err := j.Parse(ctx, t)
 	if err != nil {
 		return false, err
 	}
@@ -96,8 +97,8 @@ func (j *Jwt) Verify(t string) (bool, error) {
 	return false, nil
 }
 
-func (j *Jwt) VerifyAndParse(t string) (*UserClaim, error) {
-	token, err := j.Parse(t)
+func (j *Jwt) VerifyAndParse(ctx context.Context, t string) (*UserClaim, error) {
+	token, err := j.Parse(ctx, t)
 	if err != nil {
 		return nil, err
 	}
@@ -114,8 +115,8 @@ func (j *Jwt) customLogic(token *jwt.Token) error {
 	return nil
 }
 
-func (j *Jwt) GetClaims(t string) (*UserClaim, error) {
-	token, err := j.Parse(t, jwt.WithoutClaimsValidation())
+func (j *Jwt) GetClaims(ctx context.Context, t string) (*UserClaim, error) {
+	token, err := j.Parse(ctx, t, jwt.WithoutClaimsValidation())
 	if err != nil {
 		return nil, err
 	}
@@ -125,8 +126,8 @@ func (j *Jwt) GetClaims(t string) (*UserClaim, error) {
 	return nil, nil
 }
 
-func (j *Jwt) Refresh(t string, d time.Duration, nd *jwt.NumericDate) (string, error) {
-	token, err := j.Parse(t)
+func (j *Jwt) Refresh(ctx context.Context, t string, d time.Duration, nd *jwt.NumericDate) (string, error) {
+	token, err := j.Parse(ctx, t)
 	if err != nil {
 		return "", err
 	}
@@ -137,8 +138,8 @@ func (j *Jwt) Refresh(t string, d time.Duration, nd *jwt.NumericDate) (string, e
 	return "", nil
 }
 
-func (j *Jwt) Expire(t string) (string, error) {
-	token, err := j.Parse(t)
+func (j *Jwt) Expire(ctx context.Context, t string) (string, error) {
+	token, err := j.Parse(ctx, t)
 	if err != nil {
 		return "", err
 	}

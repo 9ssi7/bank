@@ -31,6 +31,17 @@ const (
 	TransactionDirectionInternal TransactionDirection = "internal"
 )
 
+type TransactionListItem struct {
+	Id          uuid.UUID  `json:"id"`
+	AccountId   *uuid.UUID `json:"account_id,omitempty"`
+	AccountName *string    `json:"account_name,omitempty"`
+	Amount      string     `json:"amount"`
+	Description string     `json:"description"`
+	Kind        string     `json:"kind"`
+	Direction   string     `json:"direction"`
+	CreatedAt   string     `json:"created_at"`
+}
+
 type Transaction struct {
 	Id          uuid.UUID       `json:"id"`
 	SenderId    uuid.UUID       `json:"sender_id"`

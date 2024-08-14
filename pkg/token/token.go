@@ -1,19 +1,12 @@
 package token
 
 import (
+	"context"
 	"os"
 	"time"
 )
 
-type Srv interface {
-	GenerateAccessToken(u User) (string, error)
-	GenerateRefreshToken(u User) (string, error)
-	Parse(token string) (*UserClaim, error)
-	Verify(token string) (bool, error)
-	VerifyAndParse(token string) (*UserClaim, error)
-}
-
-type service struct {
+type Service struct {
 	jwt *Jwt
 	cnf Config
 }
@@ -30,7 +23,7 @@ const (
 	RefreshTokenDuration time.Duration = time.Hour * 24 * 30
 )
 
-func New(cnf Config) (*service, error) {
+func New(cnf Config) (*Service, error) {
 	j, err := NewJwt(JwtConfig{
 		PublicKey:  readFile(cnf.PublicKeyFile),
 		PrivateKey: readFile(cnf.PrivateKeyFile),
@@ -39,7 +32,7 @@ func New(cnf Config) (*service, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &service{
+	return &Service{
 		jwt: j,
 		cnf: cnf,
 	}, nil
@@ -53,7 +46,7 @@ func readFile(name string) []byte {
 	return f
 }
 
-func (t *service) GenerateAccessToken(u User) (string, error) {
+func (t *Service) GenerateAccessToken(ctx context.Context, u User) (string, error) {
 	claims := &UserClaim{
 		User:      u,
 		Project:   t.cnf.Project,
@@ -64,7 +57,7 @@ func (t *service) GenerateAccessToken(u User) (string, error) {
 	return t.generate(claims)
 }
 
-func (t *service) GenerateRefreshToken(u User) (string, error) {
+func (t *Service) GenerateRefreshToken(ctx context.Context, u User) (string, error) {
 	claims := &UserClaim{
 		User:      u,
 		Project:   t.cnf.Project,
@@ -75,7 +68,7 @@ func (t *service) GenerateRefreshToken(u User) (string, error) {
 	return t.generate(claims)
 }
 
-func (t *service) generate(u *UserClaim) (string, error) {
+func (t *Service) generate(u *UserClaim) (string, error) {
 	tkn, err := t.jwt.Sign(u)
 	if err != nil {
 		return "", err
@@ -83,14 +76,14 @@ func (t *service) generate(u *UserClaim) (string, error) {
 	return tkn, nil
 }
 
-func (t *service) Parse(token string) (*UserClaim, error) {
-	return t.jwt.GetClaims(token)
+func (t *Service) Parse(ctx context.Context, token string) (*UserClaim, error) {
+	return t.jwt.GetClaims(ctx, token)
 }
 
-func (t *service) Verify(token string) (bool, error) {
-	return t.jwt.Verify(token)
+func (t *Service) Verify(ctx context.Context, token string) (bool, error) {
+	return t.jwt.Verify(ctx, token)
 }
 
-func (t *service) VerifyAndParse(token string) (*UserClaim, error) {
-	return t.jwt.VerifyAndParse(token)
+func (t *Service) VerifyAndParse(ctx context.Context, token string) (*UserClaim, error) {
+	return t.jwt.VerifyAndParse(ctx, token)
 }

@@ -10,20 +10,21 @@ import (
 	"github.com/google/uuid"
 )
 
-type accountRepo struct {
+type AccountSqlRepo struct {
 	syncRepo
 	txnSqlRepo
 	db *sql.DB
 }
 
-func NewAccountRepo(db *sql.DB) account.Repo {
-	return &accountRepo{
+func NewAccountRepo(db *sql.DB) *AccountSqlRepo {
+	return &AccountSqlRepo{
 		db:         db,
 		txnSqlRepo: newTxnSqlRepo(db),
+		syncRepo:   newSyncRepo(),
 	}
 }
 
-func (r *accountRepo) Save(ctx context.Context, account *account.Account) error {
+func (r *AccountSqlRepo) Save(ctx context.Context, account *account.Account) error {
 	r.syncRepo.Lock()
 	defer r.syncRepo.Unlock()
 	q := "INSERT INTO accounts (id, user_id, iban, owner, balance, currency) VALUES ($1, $2, $3, $4, $5, $6)"
@@ -35,7 +36,7 @@ func (r *accountRepo) Save(ctx context.Context, account *account.Account) error 
 	return err
 }
 
-func (r *accountRepo) ListByUserId(ctx context.Context, userId uuid.UUID, pagi *list.PagiRequest) (*list.PagiResponse[*account.Account], error) {
+func (r *AccountSqlRepo) ListByUserId(ctx context.Context, userId uuid.UUID, pagi *list.PagiRequest) (*list.PagiResponse[*account.Account], error) {
 	var total int64
 	res, err := r.adapter.GetCurrent().QueryContext(ctx, "SELECT COUNT(*) FROM accounts WHERE user_id = $1", userId)
 	if err != nil {
@@ -66,7 +67,7 @@ func (r *accountRepo) ListByUserId(ctx context.Context, userId uuid.UUID, pagi *
 	}, nil
 }
 
-func (r *accountRepo) FindByIbanAndOwner(ctx context.Context, iban string, owner string) (*account.Account, error) {
+func (r *AccountSqlRepo) FindByIbanAndOwner(ctx context.Context, iban string, owner string) (*account.Account, error) {
 	var a account.Account
 	res, err := r.adapter.GetCurrent().QueryContext(ctx, "SELECT * FROM accounts WHERE iban = $1 AND owner = $2", iban, owner)
 	if err != nil {
@@ -79,7 +80,7 @@ func (r *accountRepo) FindByIbanAndOwner(ctx context.Context, iban string, owner
 	return &a, nil
 }
 
-func (r *accountRepo) FindByUserIdAndId(ctx context.Context, userId uuid.UUID, id uuid.UUID) (*account.Account, error) {
+func (r *AccountSqlRepo) FindByUserIdAndId(ctx context.Context, userId uuid.UUID, id uuid.UUID) (*account.Account, error) {
 	var a account.Account
 	res, err := r.adapter.GetCurrent().QueryContext(ctx, "SELECT * FROM accounts WHERE user_id = $1 AND id = $2", userId, id)
 	if err != nil {
@@ -92,7 +93,7 @@ func (r *accountRepo) FindByUserIdAndId(ctx context.Context, userId uuid.UUID, i
 	return &a, nil
 }
 
-func (r *accountRepo) FindById(ctx context.Context, id uuid.UUID) (*account.Account, error) {
+func (r *AccountSqlRepo) FindById(ctx context.Context, id uuid.UUID) (*account.Account, error) {
 	var a account.Account
 	res, err := r.adapter.GetCurrent().QueryContext(ctx, "SELECT * FROM accounts WHERE id = $1", id)
 	if err != nil {

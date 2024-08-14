@@ -1,6 +1,7 @@
 package token
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -112,7 +113,7 @@ func TestSign(t *testing.T) {
 	}
 
 	// Basic token structure check
-	if _, err := jwtInstance.Parse(tokenString); err != nil {
+	if _, err := jwtInstance.Parse(context.Background(), tokenString); err != nil {
 		t.Errorf("Invalid token format: %v", err)
 	}
 }
@@ -128,14 +129,14 @@ func TestParse(t *testing.T) {
 		ExpiresIn: time.Now().Add(time.Hour).Unix(),
 	}
 	tokenString, _ := jwtInstance.Sign(userClaim)
-	_, err = jwtInstance.Parse(tokenString)
+	_, err = jwtInstance.Parse(context.Background(), tokenString)
 	if err != nil {
 		t.Errorf("Unexpected error parsing valid token: %v", err)
 	}
 
 	// Invalid token (triggering the error branch in Parse)
 	invalidToken := "this.is.not.a.valid.jwt"
-	_, err = jwtInstance.Parse(invalidToken)
+	_, err = jwtInstance.Parse(context.Background(), invalidToken)
 	if err == nil {
 		t.Error("Expected an error parsing invalid token, but got nil")
 	}
@@ -191,7 +192,7 @@ func TestVerify(t *testing.T) {
 				t.Fatal(err)
 			}
 			tokenString, _ := jwtInstance.Sign(tc.claim)
-			valid, err := jwtInstance.Verify(tokenString)
+			valid, err := jwtInstance.Verify(context.Background(), tokenString)
 			if (err != nil) != tc.expectErr {
 				t.Errorf("Verify() error = %v, expectErr = %v", err, tc.expectErr)
 			}
@@ -267,7 +268,7 @@ func TestVerifyAndParse(t *testing.T) {
 				}
 			}
 
-			claim, err := jwtInstance.VerifyAndParse(tokenString)
+			claim, err := jwtInstance.VerifyAndParse(context.Background(), tokenString)
 			if (err != nil) != tc.expectErr {
 				t.Errorf("VerifyAndParse() error = %v, expectErr = %v", err, tc.expectErr)
 			}
@@ -292,7 +293,7 @@ func TestGetClaims(t *testing.T) {
 	tokenString, _ := jwtInstance.Sign(userClaim)
 
 	// Valid token
-	claims, err := jwtInstance.GetClaims(tokenString)
+	claims, err := jwtInstance.GetClaims(context.Background(), tokenString)
 	if err != nil {
 		t.Errorf("Unexpected error getting claims from valid token: %v", err)
 	}
@@ -302,7 +303,7 @@ func TestGetClaims(t *testing.T) {
 
 	// Invalid token
 	invalidToken := "this.is.not.a.valid.jwt"
-	claims, err = jwtInstance.GetClaims(invalidToken)
+	claims, err = jwtInstance.GetClaims(context.Background(), invalidToken)
 	if err == nil {
 		t.Error("Expected an error getting claims from invalid token, but got nil")
 	}
@@ -318,7 +319,7 @@ func TestGetClaims(t *testing.T) {
 	token, _ := jwtInstance.SignWithJWtClaims(jwt.RegisteredClaims{
 		ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
 	})
-	claims, err = jwtInstance.GetClaims(token)
+	claims, err = jwtInstance.GetClaims(context.Background(), token)
 	if err != nil {
 		t.Errorf("Unexpected error getting claims from valid token: %v", err)
 	}
@@ -375,7 +376,7 @@ func TestRefresh(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			tokenString, _ := jwtInstance.Sign(tc.claim)
-			_, err := jwtInstance.Refresh(tokenString, time.Hour, nil)
+			_, err := jwtInstance.Refresh(context.Background(), tokenString, time.Hour, nil)
 			if (err != nil) != tc.expectErr {
 				t.Errorf("Verify() error = %v, expectErr = %v", err, tc.expectErr)
 			}
@@ -432,7 +433,7 @@ func TestExpire(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			tokenString, _ := jwtInstance.Sign(tc.claim)
-			_, err := jwtInstance.Expire(tokenString)
+			_, err := jwtInstance.Expire(context.Background(), tokenString)
 			if (err != nil) != tc.expectErr {
 				t.Errorf("Verify() error = %v, expectErr = %v", err, tc.expectErr)
 			}
@@ -492,7 +493,7 @@ func TestCustomLogic(t *testing.T) {
 	tokenString, _ := jwtInstance.SignWithJWtClaims(jwt.RegisteredClaims{
 		ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
 	})
-	valid, err := jwtInstance.Verify(tokenString)
+	valid, err := jwtInstance.Verify(context.Background(), tokenString)
 	if err == nil { // Expect an error for an expired token
 		t.Error("Expired token should return an error, but didn't")
 	}

@@ -10,11 +10,6 @@ import (
 	smtp_mail "github.com/xhit/go-simple-mail/v2"
 )
 
-type Srv interface {
-	SendText(ctx context.Context, cnf SendConfig) error
-	SendWithTemplate(ctx context.Context, cnf SendWithTemplateConfig) error
-}
-
 type Config struct {
 	Host     string
 	Port     int
@@ -36,12 +31,12 @@ type SendWithTemplateConfig struct {
 	Data     any
 }
 
-type srv struct {
+type Srv struct {
 	cnf    Config
 	server *smtp_mail.SMTPServer
 }
 
-func Init(cnf Config) Srv {
+func New(cnf Config) *Srv {
 	server := smtp_mail.NewSMTPClient()
 	server.Host = cnf.Host
 	server.Port = cnf.Port
@@ -49,7 +44,7 @@ func Init(cnf Config) Srv {
 	server.Password = cnf.Password
 	server.Encryption = smtp_mail.EncryptionSTARTTLS
 	server.Authentication = smtp_mail.AuthLogin
-	return &srv{
+	return &Srv{
 		server: server,
 		cnf:    cnf,
 	}
@@ -62,11 +57,11 @@ func GetField(str string) string {
 	return str
 }
 
-func (s *srv) createClient() (*smtp_mail.SMTPClient, error) {
+func (s *Srv) createClient() (*smtp_mail.SMTPClient, error) {
 	return s.server.Connect()
 }
 
-func (s *srv) SendText(ctx context.Context, cnf SendConfig) error {
+func (s *Srv) SendText(ctx context.Context, cnf SendConfig) error {
 	client, err := s.createClient()
 	if err != nil {
 		fmt.Println("Error creating client: ", err)
@@ -89,7 +84,7 @@ func (s *srv) SendText(ctx context.Context, cnf SendConfig) error {
 	return nil
 }
 
-func (s *srv) SendWithTemplate(ctx context.Context, cnf SendWithTemplateConfig) error {
+func (s *Srv) SendWithTemplate(ctx context.Context, cnf SendWithTemplateConfig) error {
 	client, err := s.createClient()
 	if err != nil {
 		fmt.Println("Error creating client: ", err)

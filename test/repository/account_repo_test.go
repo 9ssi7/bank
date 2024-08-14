@@ -2,24 +2,15 @@ package repository_test
 
 import (
 	"context"
+	"database/sql"
 	"testing"
 
 	"github.com/9ssi7/bank/internal/domain/account"
-	"github.com/9ssi7/bank/internal/infra/db/migration"
 	"github.com/9ssi7/bank/internal/repository"
 	"github.com/google/uuid"
 )
 
-func TestAccountRepo(t *testing.T) {
-	ctx := context.Background()
-	db, cancel := createSqlTesting(t)
-	defer cancel()
-
-	err := migration.Run(ctx, db)
-	if err != nil {
-		t.Fatalf("Could not run migration: %s", err)
-	}
-
+func testAccountRepo(ctx context.Context, db *sql.DB, t *testing.T) {
 	repo := repository.NewAccountRepo(db)
 
 	t.Run("Create", func(t *testing.T) {

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/9ssi7/bank/internal/infra/db/migration"
 	_ "github.com/lib/pq"
 
 	"github.com/testcontainers/testcontainers-go"
@@ -48,6 +49,9 @@ func createSqlTesting(t *testing.T) (*sql.DB, CancelFunc) {
 	db, err := sql.Open("postgres", fmt.Sprintf("host=%s port=%s user=postgres password=postgres dbname=postgres sslmode=disable", host, port.Port()))
 	if err != nil {
 		t.Fatalf("Could not connect to sql: %s", err)
+	}
+	if err := migration.Run(ctx, db); err != nil {
+		t.Fatalf("Could not run migration: %s", err)
 	}
 	return db, term
 }

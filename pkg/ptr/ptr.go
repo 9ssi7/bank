@@ -26,3 +26,10 @@ func String(s string) *string {
 func Time(t time.Time) *time.Time {
 	return &t
 }
+
+// Int returns a pointer to the given int.
+// Example: ptr.Int(42)
+// Returns: *int
+func Int(i int) *int {
+	return &i
+}

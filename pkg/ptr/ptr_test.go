@@ -40,3 +40,19 @@ func TestTime(t *testing.T) {
 		t.Errorf("Time pointer does not match original: got %v, want %v", ptr, now)
 	}
 }
+
+func TestInt(t *testing.T) {
+	// Test with a positive integer
+	i := 42
+	ptr := Int(i)
+	if *ptr != i {
+		t.Errorf("Int pointer does not match original: got %v, want %v", *ptr, i)
+	}
+
+	// Test with a negative integer
+	neg := -42
+	negPtr := Int(neg)
+	if *negPtr != neg {
+		t.Errorf("Int pointer for negative integer does not match original")
+	}
+}

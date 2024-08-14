@@ -8,6 +8,7 @@ import (
 	"github.com/9ssi7/bank/pkg/list"
 	"github.com/9ssi7/bank/pkg/query"
 	"github.com/google/uuid"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type TransactionSqlRepo struct {
@@ -24,7 +25,9 @@ func NewTransactionRepo(db *sql.DB) *TransactionSqlRepo {
 	}
 }
 
-func (r *TransactionSqlRepo) Save(ctx context.Context, transaction *account.Transaction) error {
+func (r *TransactionSqlRepo) Save(ctx context.Context, trc trace.Tracer, transaction *account.Transaction) error {
+	ctx, span := trc.Start(ctx, "TransactionSqlRepo.Save")
+	defer span.End()
 	r.syncRepo.Lock()
 	defer r.syncRepo.Unlock()
 	q := "INSERT INTO transactions (id, sender_id, receiver_id, amount, description, kind, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7)"
@@ -36,7 +39,9 @@ func (r *TransactionSqlRepo) Save(ctx context.Context, transaction *account.Tran
 	return err
 }
 
-func (r *TransactionSqlRepo) Filter(ctx context.Context, accountId uuid.UUID, pagi *list.PagiRequest, filters *account.TransactionFilters) (*list.PagiResponse[*account.Transaction], error) {
+func (r *TransactionSqlRepo) Filter(ctx context.Context, trc trace.Tracer, accountId uuid.UUID, pagi *list.PagiRequest, filters *account.TransactionFilters) (*list.PagiResponse[*account.Transaction], error) {
+	ctx, span := trc.Start(ctx, "TransactionSqlRepo.Filter")
+	defer span.End()
 	var total int64
 	res, err := r.adapter.GetCurrent().QueryContext(ctx, "SELECT COUNT(*) FROM transactions WHERE sender_id = $1 OR receiver_id = $1", accountId)
 	if err != nil {

@@ -6,6 +6,7 @@ import (
 
 	"github.com/9ssi7/bank/internal/domain/user"
 	"github.com/google/uuid"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type UserSqlRepo struct {
@@ -22,7 +23,9 @@ func NewUserRepo(db *sql.DB) *UserSqlRepo {
 	}
 }
 
-func (r *UserSqlRepo) FindByEmail(ctx context.Context, email string) (*user.User, error) {
+func (r *UserSqlRepo) FindByEmail(ctx context.Context, trc trace.Tracer, email string) (*user.User, error) {
+	ctx, span := trc.Start(ctx, "UserSqlRepo.FindByEmail")
+	defer span.End()
 	var u user.User
 	res, err := r.adapter.GetCurrent().QueryContext(ctx, "SELECT * FROM users WHERE email = $1", email)
 	if err != nil {
@@ -35,7 +38,9 @@ func (r *UserSqlRepo) FindByEmail(ctx context.Context, email string) (*user.User
 	return &u, nil
 }
 
-func (r *UserSqlRepo) FindByPhone(ctx context.Context, phone string) (*user.User, error) {
+func (r *UserSqlRepo) FindByPhone(ctx context.Context, trc trace.Tracer, phone string) (*user.User, error) {
+	ctx, span := trc.Start(ctx, "UserSqlRepo.FindByPhone")
+	defer span.End()
 	var u user.User
 	res, err := r.adapter.GetCurrent().QueryContext(ctx, "SELECT * FROM users WHERE phone = $1", phone)
 	if err != nil {
@@ -48,7 +53,9 @@ func (r *UserSqlRepo) FindByPhone(ctx context.Context, phone string) (*user.User
 	return &u, nil
 }
 
-func (r *UserSqlRepo) FindById(ctx context.Context, id uuid.UUID) (*user.User, error) {
+func (r *UserSqlRepo) FindById(ctx context.Context, trc trace.Tracer, id uuid.UUID) (*user.User, error) {
+	ctx, span := trc.Start(ctx, "UserSqlRepo.FindById")
+	defer span.End()
 	var u user.User
 	res, err := r.adapter.GetCurrent().QueryContext(ctx, "SELECT * FROM users WHERE id = $1", id)
 	if err != nil {
@@ -61,7 +68,9 @@ func (r *UserSqlRepo) FindById(ctx context.Context, id uuid.UUID) (*user.User, e
 	return &u, nil
 }
 
-func (r *UserSqlRepo) FindByToken(ctx context.Context, token string) (*user.User, error) {
+func (r *UserSqlRepo) FindByToken(ctx context.Context, trc trace.Tracer, token string) (*user.User, error) {
+	ctx, span := trc.Start(ctx, "UserSqlRepo.FindByToken")
+	defer span.End()
 	var u user.User
 	res, err := r.adapter.GetCurrent().QueryContext(ctx, "SELECT * FROM users WHERE temp_token = $1", token)
 	if err != nil {
@@ -74,7 +83,9 @@ func (r *UserSqlRepo) FindByToken(ctx context.Context, token string) (*user.User
 	return &u, nil
 }
 
-func (r *UserSqlRepo) IsExistsByEmail(ctx context.Context, email string) (bool, error) {
+func (r *UserSqlRepo) IsExistsByEmail(ctx context.Context, trc trace.Tracer, email string) (bool, error) {
+	ctx, span := trc.Start(ctx, "UserSqlRepo.IsExistsByEmail")
+	defer span.End()
 	var total int64
 	res, err := r.adapter.GetCurrent().QueryContext(ctx, "SELECT COUNT(*) FROM users WHERE email = $1", email)
 	if err != nil {
@@ -87,7 +98,9 @@ func (r *UserSqlRepo) IsExistsByEmail(ctx context.Context, email string) (bool, 
 	return total > 0, nil
 }
 
-func (r *UserSqlRepo) Save(ctx context.Context, user *user.User) error {
+func (r *UserSqlRepo) Save(ctx context.Context, trc trace.Tracer, user *user.User) error {
+	ctx, span := trc.Start(ctx, "UserSqlRepo.Save")
+	defer span.End()
 	r.syncRepo.Lock()
 	defer r.syncRepo.Unlock()
 	q := "INSERT INTO users (id, name, email, is_active, temp_token, verified_at, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)"

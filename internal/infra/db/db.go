@@ -4,6 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+
+	"github.com/XSAM/otelsql"
+	semconv "go.opentelemetry.io/otel/semconv/v1.18.0"
 )
 
 type Config struct {
@@ -16,12 +19,21 @@ type Config struct {
 }
 
 func New(ctx context.Context, cnf Config) (*sql.DB, error) {
-	sql, err := sql.Open("postgres", fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s", cnf.Host, cnf.Port, cnf.User, cnf.Password, cnf.DBName, cnf.SSLMode))
+	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s", cnf.Host, cnf.Port, cnf.User, cnf.Password, cnf.DBName, cnf.SSLMode)
+	db, err := otelsql.Open("postgres", dsn, otelsql.WithAttributes(
+		semconv.DBSystemMySQL,
+	))
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	if err := sql.PingContext(ctx); err != nil {
-		panic(err)
+	err = otelsql.RegisterDBStatsMetrics(db, otelsql.WithAttributes(
+		semconv.DBSystemMySQL,
+	))
+	if err != nil {
+		return nil, err
 	}
-	return sql, nil
+	if err := db.PingContext(ctx); err != nil {
+		return nil, err
+	}
+	return db, nil
 }

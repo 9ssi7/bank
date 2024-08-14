@@ -8,6 +8,7 @@ import (
 	"github.com/9ssi7/bank/internal/domain/auth"
 	"github.com/9ssi7/bank/pkg/rescode"
 	"github.com/redis/go-redis/v9"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type VerifyRedisRepo struct {
@@ -21,7 +22,9 @@ func NewVerifyRedisRepo(db *redis.Client) *VerifyRedisRepo {
 	}
 }
 
-func (r *VerifyRedisRepo) Save(ctx context.Context, token string, verify *auth.Verify) error {
+func (r *VerifyRedisRepo) Save(ctx context.Context, trc trace.Tracer, token string, verify *auth.Verify) error {
+	ctx, span := trc.Start(ctx, "VerifyRedisRepo.Save")
+	defer span.End()
 	r.syncRepo.Lock()
 	defer r.syncRepo.Unlock()
 	b, err := json.Marshal(verify)
@@ -34,7 +37,9 @@ func (r *VerifyRedisRepo) Save(ctx context.Context, token string, verify *auth.V
 	return nil
 }
 
-func (r *VerifyRedisRepo) IsExists(ctx context.Context, token string, deviceId string) (bool, error) {
+func (r *VerifyRedisRepo) IsExists(ctx context.Context, trc trace.Tracer, token string, deviceId string) (bool, error) {
+	ctx, span := trc.Start(ctx, "VerifyRedisRepo.IsExists")
+	defer span.End()
 	res, err := r.db.Get(ctx, r.calcKey(deviceId, token)).Result()
 	if err != nil {
 		return false, rescode.Failed(err)
@@ -42,7 +47,9 @@ func (r *VerifyRedisRepo) IsExists(ctx context.Context, token string, deviceId s
 	return res != "", nil
 }
 
-func (r *VerifyRedisRepo) Find(ctx context.Context, token string, deviceId string) (*auth.Verify, error) {
+func (r *VerifyRedisRepo) Find(ctx context.Context, trc trace.Tracer, token string, deviceId string) (*auth.Verify, error) {
+	ctx, span := trc.Start(ctx, "VerifyRedisRepo.Find")
+	defer span.End()
 	res, err := r.db.Get(ctx, r.calcKey(deviceId, token)).Result()
 	if err != nil {
 		return nil, rescode.Failed(err)
@@ -54,7 +61,9 @@ func (r *VerifyRedisRepo) Find(ctx context.Context, token string, deviceId strin
 	return &e, nil
 }
 
-func (r *VerifyRedisRepo) Delete(ctx context.Context, token string, deviceId string) error {
+func (r *VerifyRedisRepo) Delete(ctx context.Context, trc trace.Tracer, token string, deviceId string) error {
+	ctx, span := trc.Start(ctx, "VerifyRedisRepo.Delete")
+	defer span.End()
 	if err := r.db.Del(ctx, r.calcKey(deviceId, token)).Err(); err != nil {
 		return rescode.Failed(err)
 	}

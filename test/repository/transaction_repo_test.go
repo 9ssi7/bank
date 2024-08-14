@@ -11,16 +11,17 @@ import (
 	"github.com/9ssi7/bank/pkg/ptr"
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
+	"go.opentelemetry.io/otel/trace"
 )
 
-func testTransactionRepo(ctx context.Context, db *sql.DB, t *testing.T) {
+func testTransactionRepo(ctx context.Context, db *sql.DB, trc trace.Tracer, t *testing.T) {
 	repo := repository.NewTransactionRepo(db)
 
 	t.Run("Create", func(t *testing.T) {
 		accountId := uuid.New()
 		amount := decimal.NewFromFloat(100)
 		tx := account.NewTransaction(accountId, accountId, amount, "test", account.TransactionKindDeposit)
-		err := repo.Save(ctx, tx)
+		err := repo.Save(ctx, trc, tx)
 		if err != nil {
 			t.Fatalf("Could not save transaction: %s", err)
 		}
@@ -33,13 +34,13 @@ func testTransactionRepo(ctx context.Context, db *sql.DB, t *testing.T) {
 		accountId := uuid.New()
 		amount := decimal.NewFromFloat(100)
 		tx := account.NewTransaction(accountId, accountId, amount, "test", account.TransactionKindDeposit)
-		err := repo.Save(ctx, tx)
+		err := repo.Save(ctx, trc, tx)
 		if err != nil {
 			t.Fatalf("Could not save transaction: %s", err)
 		}
 		pagi := &list.PagiRequest{Limit: ptr.Int(10), Page: ptr.Int(1)}
 		filters := &account.TransactionFilters{}
-		_, err = repo.Filter(ctx, accountId, pagi, filters)
+		_, err = repo.Filter(ctx, trc, accountId, pagi, filters)
 		if err != nil {
 			t.Fatalf("Could not filter transaction: %s", err)
 		}

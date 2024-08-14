@@ -8,15 +8,16 @@ import (
 	"github.com/9ssi7/bank/internal/domain/account"
 	"github.com/9ssi7/bank/internal/repository"
 	"github.com/google/uuid"
+	"go.opentelemetry.io/otel/trace"
 )
 
-func testAccountRepo(ctx context.Context, db *sql.DB, t *testing.T) {
+func testAccountRepo(ctx context.Context, db *sql.DB, trc trace.Tracer, t *testing.T) {
 	repo := repository.NewAccountRepo(db)
 
 	t.Run("Create", func(t *testing.T) {
 		userId := uuid.New()
 		acc := account.New(userId, "test", "test 0", "TRY")
-		err := repo.Save(ctx, acc)
+		err := repo.Save(ctx, trc, acc)
 		if err != nil {
 			t.Fatalf("Could not save account: %s", err)
 		}
@@ -28,12 +29,12 @@ func testAccountRepo(ctx context.Context, db *sql.DB, t *testing.T) {
 	t.Run("Update", func(t *testing.T) {
 		userId := uuid.New()
 		acc := account.New(userId, "test", "test 0", "TRY")
-		err := repo.Save(ctx, acc)
+		err := repo.Save(ctx, trc, acc)
 		if err != nil {
 			t.Fatalf("Could not save account: %s", err)
 		}
 		acc.Owner = "test 1"
-		err = repo.Save(ctx, acc)
+		err = repo.Save(ctx, trc, acc)
 		if err != nil {
 			t.Fatalf("Could not update account: %s", err)
 		}

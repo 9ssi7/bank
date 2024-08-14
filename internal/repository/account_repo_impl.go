@@ -6,6 +6,7 @@ import (
 
 	"github.com/9ssi7/bank/internal/domain/account"
 	"github.com/9ssi7/bank/pkg/list"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/google/uuid"
 )
@@ -24,7 +25,9 @@ func NewAccountRepo(db *sql.DB) *AccountSqlRepo {
 	}
 }
 
-func (r *AccountSqlRepo) Save(ctx context.Context, account *account.Account) error {
+func (r *AccountSqlRepo) Save(ctx context.Context, trc trace.Tracer, account *account.Account) error {
+	ctx, span := trc.Start(ctx, "AccountSqlRepo.Save")
+	defer span.End()
 	r.syncRepo.Lock()
 	defer r.syncRepo.Unlock()
 	q := "INSERT INTO accounts (id, user_id, iban, owner, balance, currency) VALUES ($1, $2, $3, $4, $5, $6)"
@@ -36,7 +39,9 @@ func (r *AccountSqlRepo) Save(ctx context.Context, account *account.Account) err
 	return err
 }
 
-func (r *AccountSqlRepo) ListByUserId(ctx context.Context, userId uuid.UUID, pagi *list.PagiRequest) (*list.PagiResponse[*account.Account], error) {
+func (r *AccountSqlRepo) ListByUserId(ctx context.Context, trc trace.Tracer, userId uuid.UUID, pagi *list.PagiRequest) (*list.PagiResponse[*account.Account], error) {
+	ctx, span := trc.Start(ctx, "AccountSqlRepo.ListByUserId")
+	defer span.End()
 	var total int64
 	res, err := r.adapter.GetCurrent().QueryContext(ctx, "SELECT COUNT(*) FROM accounts WHERE user_id = $1", userId)
 	if err != nil {
@@ -67,7 +72,9 @@ func (r *AccountSqlRepo) ListByUserId(ctx context.Context, userId uuid.UUID, pag
 	}, nil
 }
 
-func (r *AccountSqlRepo) FindByIbanAndOwner(ctx context.Context, iban string, owner string) (*account.Account, error) {
+func (r *AccountSqlRepo) FindByIbanAndOwner(ctx context.Context, trc trace.Tracer, iban string, owner string) (*account.Account, error) {
+	ctx, span := trc.Start(ctx, "AccountSqlRepo.FindByIbanAndOwner")
+	defer span.End()
 	var a account.Account
 	res, err := r.adapter.GetCurrent().QueryContext(ctx, "SELECT * FROM accounts WHERE iban = $1 AND owner = $2", iban, owner)
 	if err != nil {
@@ -80,7 +87,9 @@ func (r *AccountSqlRepo) FindByIbanAndOwner(ctx context.Context, iban string, ow
 	return &a, nil
 }
 
-func (r *AccountSqlRepo) FindByUserIdAndId(ctx context.Context, userId uuid.UUID, id uuid.UUID) (*account.Account, error) {
+func (r *AccountSqlRepo) FindByUserIdAndId(ctx context.Context, trc trace.Tracer, userId uuid.UUID, id uuid.UUID) (*account.Account, error) {
+	ctx, span := trc.Start(ctx, "AccountSqlRepo.FindByUserIdAndId")
+	defer span.End()
 	var a account.Account
 	res, err := r.adapter.GetCurrent().QueryContext(ctx, "SELECT * FROM accounts WHERE user_id = $1 AND id = $2", userId, id)
 	if err != nil {
@@ -93,7 +102,9 @@ func (r *AccountSqlRepo) FindByUserIdAndId(ctx context.Context, userId uuid.UUID
 	return &a, nil
 }
 
-func (r *AccountSqlRepo) FindById(ctx context.Context, id uuid.UUID) (*account.Account, error) {
+func (r *AccountSqlRepo) FindById(ctx context.Context, trc trace.Tracer, id uuid.UUID) (*account.Account, error) {
+	ctx, span := trc.Start(ctx, "AccountSqlRepo.FindByUserIdAndId")
+	defer span.End()
 	var a account.Account
 	res, err := r.adapter.GetCurrent().QueryContext(ctx, "SELECT * FROM accounts WHERE id = $1", id)
 	if err != nil {

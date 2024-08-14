@@ -13,23 +13,24 @@ import (
 )
 
 type AccountRoutes struct {
+	Tracer         trace.Tracer
 	ValidationSrv  validation.Srv
 	AccountUseCase *usecase.AccountUseCase
-	Tracer         trace.Tracer
+	Rest           *restsrv.Srv
 }
 
-func (r *AccountRoutes) Register(router fiber.Router, srv *restsrv.Srv) {
+func (r *AccountRoutes) Register(router fiber.Router) {
 	group := router.Group("/accounts")
-	group.Post("/", srv.AccessInit(), srv.AccessRequired(), srv.Timeout(r.create))
-	group.Patch("/:id/activate", srv.AccessInit(), srv.AccessRequired(), srv.Timeout(r.activate))
-	group.Patch("/:id/freeze", srv.AccessInit(), srv.AccessRequired(), srv.Timeout(r.freeze))
-	group.Patch("/:id/suspend", srv.AccessInit(), srv.AccessRequired(), srv.Timeout(r.Suspent))
-	group.Patch("/:id/lock", srv.AccessInit(), srv.AccessRequired(), srv.Timeout(r.lock))
-	group.Post("/:id/credit", srv.AccessInit(), srv.AccessRequired(), srv.Timeout(r.credit))
-	group.Post("/:id/debit", srv.AccessInit(), srv.AccessRequired(), srv.Timeout(r.debit))
-	group.Post("/:id/transfer", srv.AccessInit(), srv.AccessRequired(), srv.Timeout(r.transferMoney))
-	group.Get("/", srv.AccessInit(), srv.AccessRequired(), srv.Timeout(r.list))
-	group.Get("/:id/transactions", srv.AccessInit(), srv.AccessRequired(), srv.Timeout(r.listTransactions))
+	group.Post("/", r.Rest.AccessInit(), r.Rest.AccessRequired(), r.Rest.Timeout(r.create))
+	group.Patch("/:id/activate", r.Rest.AccessInit(), r.Rest.AccessRequired(), r.Rest.Timeout(r.activate))
+	group.Patch("/:id/freeze", r.Rest.AccessInit(), r.Rest.AccessRequired(), r.Rest.Timeout(r.freeze))
+	group.Patch("/:id/suspend", r.Rest.AccessInit(), r.Rest.AccessRequired(), r.Rest.Timeout(r.Suspent))
+	group.Patch("/:id/lock", r.Rest.AccessInit(), r.Rest.AccessRequired(), r.Rest.Timeout(r.lock))
+	group.Post("/:id/credit", r.Rest.AccessInit(), r.Rest.AccessRequired(), r.Rest.Timeout(r.credit))
+	group.Post("/:id/debit", r.Rest.AccessInit(), r.Rest.AccessRequired(), r.Rest.Timeout(r.debit))
+	group.Post("/:id/transfer", r.Rest.AccessInit(), r.Rest.AccessRequired(), r.Rest.Timeout(r.transferMoney))
+	group.Get("/", r.Rest.AccessInit(), r.Rest.AccessRequired(), r.Rest.Timeout(r.list))
+	group.Get("/:id/transactions", r.Rest.AccessInit(), r.Rest.AccessRequired(), r.Rest.Timeout(r.listTransactions))
 }
 
 func (r *AccountRoutes) create(c *fiber.Ctx) error {

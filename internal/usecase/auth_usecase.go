@@ -16,7 +16,6 @@ import (
 
 type UserRepo interface {
 	FindByEmail(ctx context.Context, trc trace.Tracer, email string) (*user.User, error)
-	FindByPhone(ctx context.Context, trc trace.Tracer, phone string) (*user.User, error)
 	FindById(ctx context.Context, trc trace.Tracer, id uuid.UUID) (*user.User, error)
 	FindByToken(ctx context.Context, trc trace.Tracer, token string) (*user.User, error)
 	IsExistsByEmail(ctx context.Context, trc trace.Tracer, email string) (bool, error)
@@ -55,8 +54,8 @@ type AuthUseCase struct {
 	sessionRepo SessionRepo
 }
 
-func (u *AuthUseCase) LoginCheck(ctx context.Context, trc trace.Tracer, verifyToken string) error {
-	ctx, span := trc.Start(ctx, "AuthUseCase.LoginCheck")
+func (u *AuthUseCase) LoginVerifyCheck(ctx context.Context, trc trace.Tracer, verifyToken string) error {
+	ctx, span := trc.Start(ctx, "AuthUseCase.VerifyCheck")
 	defer span.End()
 	exists, err := u.verifyRepo.IsExists(ctx, trc, verifyToken, state.GetDeviceId(ctx))
 	if err != nil {
@@ -68,22 +67,12 @@ func (u *AuthUseCase) LoginCheck(ctx context.Context, trc trace.Tracer, verifyTo
 	return nil
 }
 
-func (u *AuthUseCase) LoginStart(ctx context.Context, trc trace.Tracer, phone, email string, device *agent.Device) (*string, error) {
+func (u *AuthUseCase) LoginStart(ctx context.Context, trc trace.Tracer, email string, device *agent.Device) (*string, error) {
 	ctx, span := trc.Start(ctx, "AuthUseCase.LoginStart")
 	defer span.End()
-	var usr *user.User
-	if phone != "" {
-		u, err := u.userRepo.FindByPhone(ctx, trc, phone)
-		if err != nil {
-			return nil, err
-		}
-		usr = u
-	} else {
-		u, err := u.userRepo.FindByEmail(ctx, trc, email)
-		if err != nil {
-			return nil, err
-		}
-		usr = u
+	usr, err := u.userRepo.FindByEmail(ctx, trc, email)
+	if err != nil {
+		return nil, err
 	}
 	if usr == nil {
 		return nil, user.NotFound(errors.New("user not found"))
@@ -99,7 +88,7 @@ func (u *AuthUseCase) LoginStart(ctx context.Context, trc trace.Tracer, phone, e
 	if err := u.verifyRepo.Save(ctx, trc, verifyToken, verify); err != nil {
 		return nil, err
 	}
-	err := u.eventSrv.Publish(ctx, auth.SubjectLoginStarted, &auth.EventLoginStarted{
+	err = u.eventSrv.Publish(ctx, auth.SubjectLoginStarted, &auth.EventLoginStarted{
 		Email:  usr.Email,
 		Code:   verify.Code,
 		Device: *device,

@@ -15,7 +15,7 @@ type UserSqlRepo struct {
 	db *sql.DB
 }
 
-func NewUserRepo(db *sql.DB) *UserSqlRepo {
+func NewUserSqlRepo(db *sql.DB) *UserSqlRepo {
 	return &UserSqlRepo{
 		db:         db,
 		txnSqlRepo: newTxnSqlRepo(db),

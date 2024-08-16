@@ -17,7 +17,7 @@ type TransactionSqlRepo struct {
 	db *sql.DB
 }
 
-func NewTransactionRepo(db *sql.DB) *TransactionSqlRepo {
+func NewTransactionSqlRepo(db *sql.DB) *TransactionSqlRepo {
 	return &TransactionSqlRepo{
 		db:         db,
 		txnSqlRepo: newTxnSqlRepo(db),

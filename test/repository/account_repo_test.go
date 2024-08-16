@@ -12,7 +12,7 @@ import (
 )
 
 func testAccountRepo(ctx context.Context, db *sql.DB, trc trace.Tracer, t *testing.T) {
-	repo := repository.NewAccountRepo(db)
+	repo := repository.NewAccountSqlRepo(db)
 
 	t.Run("Create", func(t *testing.T) {
 		userId := uuid.New()

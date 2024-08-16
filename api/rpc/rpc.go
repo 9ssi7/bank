@@ -2,6 +2,7 @@ package rpc
 
 import (
 	"context"
+	"fmt"
 	"net"
 
 	"github.com/9ssi7/bank/api/rpc/middlewares"
@@ -48,6 +49,9 @@ func New(cnf Config) *Server {
 		authUseCase:    cnf.AuthUseCase,
 		accountUseCase: cnf.AccountUseCasee,
 		validationSrv:  cnf.ValidationSrv,
+		meter:          cnf.Meter,
+		srv:            nil,
+		domain:         cnf.Domain,
 	}
 }
 
@@ -56,7 +60,7 @@ func (s *Server) Listen() error {
 	if err != nil {
 		return err
 	}
-	lis, err := net.Listen("tcp", s.port)
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%s", s.port))
 	if err != nil {
 		return err
 	}

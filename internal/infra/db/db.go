@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/XSAM/otelsql"
+	_ "github.com/lib/pq"
 	semconv "go.opentelemetry.io/otel/semconv/v1.18.0"
 )
 

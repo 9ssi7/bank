@@ -17,7 +17,7 @@ type AccountSqlRepo struct {
 	db *sql.DB
 }
 
-func NewAccountRepo(db *sql.DB) *AccountSqlRepo {
+func NewAccountSqlRepo(db *sql.DB) *AccountSqlRepo {
 	return &AccountSqlRepo{
 		db:         db,
 		txnSqlRepo: newTxnSqlRepo(db),

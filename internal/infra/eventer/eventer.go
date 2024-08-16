@@ -34,8 +34,9 @@ func (s *Srv) Connect(ctx context.Context) error {
 	return nil
 }
 
-func (s *Srv) Disconnect(ctx context.Context) {
+func (s *Srv) Disconnect(ctx context.Context) error {
 	s.nc.Close()
+	return nil
 }
 
 func (s *Srv) Publish(ctx context.Context, sub string, data interface{}) error {

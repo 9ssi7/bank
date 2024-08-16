@@ -1,0 +1,53 @@
+database:
+  host: bank-db
+  port: "5432"
+  user: bank
+  pass: bank
+  name: bank
+  ssl_mode: disable
+  migrate: true
+
+keyval:
+  host: bank-redis
+  port: "6379"
+  password: ""
+  db: 0
+
+observer:
+  endpoint: otel-collector:4317
+  name: 9ssi7.bank
+  use_ssl: false
+
+token:
+  public_key_file: /run/secrets/bank_public_key
+  private_key_file: /run/secrets/bank_private_key
+  project: 9ssi7
+  sign_method: RS256
+
+event:
+  stream_url: nats://nats:4222
+
+turnstile:
+  secret: ""
+  skip: true
+
+rest: 
+  host: "0.0.0.0"
+  port: "4000"
+  domain: "localhost"
+  allowed_methods: "GET,POST,PUT,DELETE,OPTIONS,PATCH"
+  allowed_headers: "Content-Type,Authorization,X-Turnstile-Token,Access-Control-Allow-Credentials"
+  allowed_origins: "localhost"
+  expose_headers: "Retry-After,X-Ratelimit-Limit,X-Ratelimit-Remaining,X-Ratelimit-Reset"
+  allow_credentials: true
+
+rpc:
+  host: "0.0.0.0"
+  port: "5000"
+  domain: "localhost"
+
+i18n:
+  locales:
+    - en
+    - tr
+  default: en

@@ -15,7 +15,7 @@ import (
 )
 
 func testTransactionRepo(ctx context.Context, db *sql.DB, trc trace.Tracer, t *testing.T) {
-	repo := repository.NewTransactionRepo(db)
+	repo := repository.NewTransactionSqlRepo(db)
 
 	t.Run("Create", func(t *testing.T) {
 		accountId := uuid.New()

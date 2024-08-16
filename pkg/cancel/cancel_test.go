@@ -74,12 +74,12 @@ func TestNew(t *testing.T) {
 		}
 	})
 }
-func TestRunWithTimeout(t *testing.T) {
+func TestNewWithTimeout(t *testing.T) {
 	ctx := context.Background()
 	d := 100 * time.Millisecond
 
 	t.Run("function completes within timeout", func(t *testing.T) {
-		err := RunWithTimeout(ctx, d, func(ctx context.Context) error {
+		err := NewWithTimeout(ctx, d, func(ctx context.Context) error {
 			// Simulate some work that completes within the timeout
 			time.Sleep(50 * time.Millisecond)
 			return nil
@@ -91,7 +91,7 @@ func TestRunWithTimeout(t *testing.T) {
 	})
 
 	t.Run("function exceeds timeout", func(t *testing.T) {
-		err := RunWithTimeout(ctx, d, func(ctx context.Context) error {
+		err := NewWithTimeout(ctx, d, func(ctx context.Context) error {
 			// Simulate some work that exceeds the timeout
 			time.Sleep(200 * time.Millisecond)
 			return nil
@@ -105,7 +105,7 @@ func TestRunWithTimeout(t *testing.T) {
 	t.Run("function returns an error", func(t *testing.T) {
 		expectedErr := errors.New("something went wrong")
 
-		err := RunWithTimeout(ctx, d, func(ctx context.Context) error {
+		err := NewWithTimeout(ctx, d, func(ctx context.Context) error {
 			// Simulate some work that returns an error
 			return expectedErr
 		})

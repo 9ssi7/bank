@@ -26,7 +26,7 @@ func (h *AccountHandler) OnTransferIncome(ctx context.Context, msg *nats.Msg) er
 	if err := json.Unmarshal(msg.Data, &event); err != nil {
 		return err
 	}
-	return cancel.RunWithTimeout(ctx, 5*time.Second, func(ctx context.Context) error {
+	return cancel.NewWithTimeout(ctx, 5*time.Second, func(ctx context.Context) error {
 		return h.mailSrv.SendWithTemplate(ctx, mail.SendWithTemplateConfig{
 			SendConfig: mail.SendConfig{
 				To:      []string{event.Email},
@@ -48,7 +48,7 @@ func (h *AccountHandler) OnTransferOutcome(ctx context.Context, msg *nats.Msg) e
 	if err := json.Unmarshal(msg.Data, &event); err != nil {
 		return err
 	}
-	return cancel.RunWithTimeout(ctx, 5*time.Second, func(ctx context.Context) error {
+	return cancel.NewWithTimeout(ctx, 5*time.Second, func(ctx context.Context) error {
 		return h.mailSrv.SendWithTemplate(ctx, mail.SendWithTemplateConfig{
 			SendConfig: mail.SendConfig{
 				To:      []string{event.Email},

@@ -20,7 +20,13 @@ func testTransactionRepo(ctx context.Context, db *sql.DB, trc trace.Tracer, t *t
 	t.Run("Create", func(t *testing.T) {
 		accountId := uuid.New()
 		amount := decimal.NewFromFloat(100)
-		tx := account.NewTransaction(accountId, accountId, amount, "test", account.TransactionKindDeposit)
+		tx := account.NewTransaction(account.TransactionConfig{
+			SenderId:    accountId,
+			ReceiverId:  accountId,
+			Amount:      amount,
+			Description: "test",
+			Kind:        account.TransactionKindDeposit,
+		})
 		err := repo.Save(ctx, trc, tx)
 		if err != nil {
 			t.Fatalf("Could not save transaction: %s", err)
@@ -33,7 +39,13 @@ func testTransactionRepo(ctx context.Context, db *sql.DB, trc trace.Tracer, t *t
 	t.Run("Filter", func(t *testing.T) {
 		accountId := uuid.New()
 		amount := decimal.NewFromFloat(100)
-		tx := account.NewTransaction(accountId, accountId, amount, "test", account.TransactionKindDeposit)
+		tx := account.NewTransaction(account.TransactionConfig{
+			SenderId:    accountId,
+			ReceiverId:  accountId,
+			Amount:      amount,
+			Description: "test",
+			Kind:        account.TransactionKindDeposit,
+		})
 		err := repo.Save(ctx, trc, tx)
 		if err != nil {
 			t.Fatalf("Could not save transaction: %s", err)

@@ -105,9 +105,14 @@ func (u *AccountUseCase) Credit(ctx context.Context, trc trace.Tracer, opts Acco
 	if err := u.accountRepo.Save(ctx, trc, acc); err != nil {
 		return err
 	}
-	// create transaction, sender id and receiver id are the same because it is a load balance
-	t := account.NewTransaction(acc.Id, acc.Id, amountDec, "Load balance", account.TransactionKindDeposit)
-	if err := u.transactionRepo.Save(ctx, trc, t); err != nil {
+	tx := account.NewTransaction(account.TransactionConfig{
+		SenderId:    acc.Id,
+		ReceiverId:  acc.Id, // receiver id is the same as sender id because it is a deposit
+		Amount:      amountDec,
+		Description: "Load balance",
+		Kind:        account.TransactionKindDeposit,
+	})
+	if err := u.transactionRepo.Save(ctx, trc, tx); err != nil {
 		return err
 	}
 	err = u.eventSrv.Publish(ctx, account.SubjectTransferIncoming, &account.EventTranfserIncoming{
@@ -153,8 +158,13 @@ func (u *AccountUseCase) Debit(ctx context.Context, trc trace.Tracer, opts Accou
 	if err := u.accountRepo.Save(ctx, trc, acc); err != nil {
 		return err
 	}
-	// create transaction, sender id and receiver id are the same because it is a withdraw balance
-	t := account.NewTransaction(acc.Id, acc.Id, amountDec, "Load balance", account.TransactionKindDeposit)
+	t := account.NewTransaction(account.TransactionConfig{
+		SenderId:    acc.Id,
+		ReceiverId:  acc.Id, // receiver id is the same as sender id because it is a withdrawal
+		Amount:      amountDec,
+		Description: "Withdraw balance",
+		Kind:        account.TransactionKindWithdrawal,
+	})
 	if err := u.transactionRepo.Save(ctx, trc, t); err != nil {
 		return err
 	}
@@ -288,13 +298,25 @@ func (u *AccountUseCase) TransferMoney(ctx context.Context, trc trace.Tracer, op
 		return onError(ctx, account.BalanceInsufficient(errors.New("sender account balance insufficient")))
 	}
 
-	transaction := account.NewTransaction(fromAccount.Id, toAccount.Id, amountToTransfer, opts.Desc, account.TransactionKindTransfer)
-	if err := u.transactionRepo.Save(ctx, trc, transaction); err != nil {
+	tx := account.NewTransaction(account.TransactionConfig{
+		SenderId:    fromAccount.Id,
+		ReceiverId:  toAccount.Id,
+		Amount:      amountToTransfer,
+		Description: opts.Desc,
+		Kind:        account.TransactionKindTransfer,
+	})
+	if err := u.transactionRepo.Save(ctx, trc, tx); err != nil {
 		return onError(ctx, err)
 	}
 	if !amountToPay.Equal(amountToTransfer) {
-		transactionFee := account.NewTransaction(fromAccount.Id, fromAccount.Id, decimal.NewFromInt(int64(1)), "Process Fee", account.TransactionKindFee)
-		if err := u.transactionRepo.Save(ctx, trc, transactionFee); err != nil {
+		feeTx := account.NewTransaction(account.TransactionConfig{
+			SenderId:    fromAccount.Id,
+			ReceiverId:  fromAccount.Id, // receiver id is the same as sender id because it is a fee
+			Amount:      decimal.NewFromInt(int64(1)),
+			Description: "Process Fee",
+			Kind:        account.TransactionKindFee,
+		})
+		if err := u.transactionRepo.Save(ctx, trc, feeTx); err != nil {
 			return onError(ctx, err)
 		}
 	}

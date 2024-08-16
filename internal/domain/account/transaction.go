@@ -67,12 +67,20 @@ func (t *Transaction) IsUserReceiver(userId uuid.UUID) bool {
 	return t.ReceiverId == userId
 }
 
-func NewTransaction(senderId, receiverId uuid.UUID, amount decimal.Decimal, description string, kind TransactionKind) *Transaction {
+type TransactionConfig struct {
+	SenderId    uuid.UUID       `example:"00000000-0000-0000-0000-000000000000"`
+	ReceiverId  uuid.UUID       `example:"00000000-0000-0000-0000-000000000000"`
+	Amount      decimal.Decimal `example:"100.00"`
+	Description string          `example:"Transfer"`
+	Kind        TransactionKind `example:"withdrawal"`
+}
+
+func NewTransaction(cnf TransactionConfig) *Transaction {
 	return &Transaction{
-		SenderId:    senderId,
-		ReceiverId:  receiverId,
-		Amount:      amount,
-		Description: description,
-		Kind:        kind,
+		SenderId:    cnf.SenderId,
+		ReceiverId:  cnf.ReceiverId,
+		Amount:      cnf.Amount,
+		Description: cnf.Description,
+		Kind:        cnf.Kind,
 	}
 }

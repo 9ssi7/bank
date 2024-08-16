@@ -53,18 +53,25 @@ func (s *Session) SetFcmToken(token string) {
 	s.FcmToken = token
 }
 
-func NewSession(device agent.Device, deviceId, accessToken, refreshToken string) *Session {
+type SessionConfig struct {
+	Device       agent.Device
+	DeviceId     string `example:"550e8400-e29b-41d4-a716-446655440000"`
+	AccessToken  string
+	RefreshToken string
+}
+
+func NewSession(cnf SessionConfig) *Session {
 	t := time.Now()
 	return &Session{
-		DeviceId:     deviceId,
-		DeviceName:   device.Name,
-		DeviceType:   device.Type,
-		DeviceOS:     device.OS,
-		IpAddress:    device.IP,
+		DeviceId:     cnf.DeviceId,
+		DeviceName:   cnf.Device.Name,
+		DeviceType:   cnf.Device.Type,
+		DeviceOS:     cnf.Device.OS,
+		IpAddress:    cnf.Device.IP,
 		LastLogin:    t,
 		CreatedAt:    t,
 		UpdatedAt:    t,
-		RefreshToken: refreshToken,
-		AccessToken:  accessToken,
+		RefreshToken: cnf.RefreshToken,
+		AccessToken:  cnf.AccessToken,
 	}
 }

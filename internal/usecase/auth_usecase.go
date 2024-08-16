@@ -54,10 +54,14 @@ type AuthUseCase struct {
 	sessionRepo SessionRepo
 }
 
-func (u *AuthUseCase) LoginVerifyCheck(ctx context.Context, trc trace.Tracer, verifyToken string) error {
+type AuthLoginVerifyCheckOptions struct {
+	VerifyToken string
+}
+
+func (u *AuthUseCase) LoginVerifyCheck(ctx context.Context, trc trace.Tracer, opts AuthLoginVerifyCheckOptions) error {
 	ctx, span := trc.Start(ctx, "AuthUseCase.VerifyCheck")
 	defer span.End()
-	exists, err := u.verifyRepo.IsExists(ctx, trc, verifyToken, state.GetDeviceId(ctx))
+	exists, err := u.verifyRepo.IsExists(ctx, trc, opts.VerifyToken, state.GetDeviceId(ctx))
 	if err != nil {
 		return err
 	}
@@ -67,10 +71,15 @@ func (u *AuthUseCase) LoginVerifyCheck(ctx context.Context, trc trace.Tracer, ve
 	return nil
 }
 
-func (u *AuthUseCase) LoginStart(ctx context.Context, trc trace.Tracer, email string, device *agent.Device) (*string, error) {
+type AuthLoginStartOptions struct {
+	Email  string
+	Device agent.Device
+}
+
+func (u *AuthUseCase) LoginStart(ctx context.Context, trc trace.Tracer, opts AuthLoginStartOptions) (*string, error) {
 	ctx, span := trc.Start(ctx, "AuthUseCase.LoginStart")
 	defer span.End()
-	usr, err := u.userRepo.FindByEmail(ctx, trc, email)
+	usr, err := u.userRepo.FindByEmail(ctx, trc, opts.Email)
 	if err != nil {
 		return nil, err
 	}
@@ -84,14 +93,18 @@ func (u *AuthUseCase) LoginStart(ctx context.Context, trc trace.Tracer, email st
 		return nil, user.VerifyRequired(errors.New("user verify required"))
 	}
 	verifyToken := uuid.New().String()
-	verify := auth.NewVerify(usr.Id, state.GetDeviceId(ctx), state.GetLocale(ctx))
+	verify := auth.NewVerify(auth.VerifyConfig{
+		UserId:   usr.Id,
+		DeviceId: state.GetDeviceId(ctx),
+		Locale:   state.GetLocale(ctx),
+	})
 	if err := u.verifyRepo.Save(ctx, trc, verifyToken, verify); err != nil {
 		return nil, err
 	}
 	err = u.eventSrv.Publish(ctx, auth.SubjectLoginStarted, &auth.EventLoginStarted{
 		Email:  usr.Email,
 		Code:   verify.Code,
-		Device: *device,
+		Device: opts.Device,
 	})
 	if err != nil {
 		return nil, err
@@ -99,10 +112,16 @@ func (u *AuthUseCase) LoginStart(ctx context.Context, trc trace.Tracer, email st
 	return &verifyToken, nil
 }
 
-func (u *AuthUseCase) LoginVerify(ctx context.Context, trc trace.Tracer, code, verifyToken string, device *agent.Device) (*string, *string, error) {
+type AuthLoginVerifyOptions struct {
+	Code        string
+	VerifyToken string
+	Device      agent.Device
+}
+
+func (u *AuthUseCase) LoginVerify(ctx context.Context, trc trace.Tracer, opts AuthLoginVerifyOptions) (*string, *string, error) {
 	ctx, span := trc.Start(ctx, "AuthUseCase.LoginVerify")
 	defer span.End()
-	verify, err := u.verifyRepo.Find(ctx, trc, verifyToken, state.GetDeviceId(ctx))
+	verify, err := u.verifyRepo.Find(ctx, trc, opts.VerifyToken, state.GetDeviceId(ctx))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -112,15 +131,15 @@ func (u *AuthUseCase) LoginVerify(ctx context.Context, trc trace.Tracer, code, v
 	if verify.IsExceeded() {
 		return nil, nil, auth.VerificationExceeded(errors.New("verification exceeded"))
 	}
-	if code != verify.Code {
+	if opts.Code != verify.Code {
 		verify.IncTryCount()
-		err = u.verifyRepo.Save(ctx, trc, verifyToken, verify)
+		err = u.verifyRepo.Save(ctx, trc, opts.VerifyToken, verify)
 		if err != nil {
 			return nil, nil, err
 		}
 		return nil, nil, auth.VerificationInvalid(errors.New("verification invalid"))
 	}
-	err = u.verifyRepo.Delete(ctx, trc, verifyToken, state.GetDeviceId(ctx))
+	err = u.verifyRepo.Delete(ctx, trc, opts.VerifyToken, state.GetDeviceId(ctx))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -141,27 +160,39 @@ func (u *AuthUseCase) LoginVerify(ctx context.Context, trc trace.Tracer, code, v
 	if err != nil {
 		return nil, nil, rescode.Failed(err)
 	}
-	ses := auth.NewSession(*device, state.GetDeviceId(ctx), accessToken, refreshToken)
+	ses := auth.NewSession(auth.SessionConfig{
+		Device:       opts.Device,
+		DeviceId:     state.GetDeviceId(ctx),
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	})
 	if err = u.sessionRepo.Save(ctx, trc, user.Id, ses); err != nil {
 		return nil, nil, err
 	}
 	return &accessToken, &refreshToken, nil
 }
 
-func (u *AuthUseCase) RefreshToken(ctx context.Context, trc trace.Tracer, userId uuid.UUID, accessTkn, refreshToken, ipAddr string) (*string, error) {
+type AuthRefreshTokenOptions struct {
+	UserId     uuid.UUID
+	AccessTkn  string
+	RefreshTkn string
+	IpAddr     string
+}
+
+func (u *AuthUseCase) RefreshToken(ctx context.Context, trc trace.Tracer, opts AuthRefreshTokenOptions) (*string, error) {
 	ctx, span := trc.Start(ctx, "AuthUseCase.RefreshToken")
 	defer span.End()
-	session, notFound, err := u.sessionRepo.FindByIds(ctx, trc, userId, state.GetDeviceId(ctx))
+	session, notFound, err := u.sessionRepo.FindByIds(ctx, trc, opts.UserId, state.GetDeviceId(ctx))
 	if err != nil {
 		return nil, err
 	}
 	if notFound {
 		return nil, auth.InvalidRefreshOrAccessTokens(errors.New("invalid refresh with access token and ip"))
 	}
-	if !session.IsRefreshValid(accessTkn, refreshToken, ipAddr) {
+	if !session.IsRefreshValid(opts.AccessTkn, opts.RefreshTkn, opts.IpAddr) {
 		return nil, auth.InvalidRefreshOrAccessTokens(errors.New("invalid refresh with access token and ip"))
 	}
-	user, err := u.userRepo.FindById(ctx, trc, userId)
+	user, err := u.userRepo.FindById(ctx, trc, opts.UserId)
 	if err != nil {
 		return nil, err
 	}
@@ -181,24 +212,32 @@ func (u *AuthUseCase) RefreshToken(ctx context.Context, trc trace.Tracer, userId
 	return &accessToken, nil
 }
 
-func (u *AuthUseCase) Register(ctx context.Context, trc trace.Tracer, name, email string) error {
+type AuthRegisterOptions struct {
+	Name  string
+	Email string
+}
+
+func (u *AuthUseCase) Register(ctx context.Context, trc trace.Tracer, opts AuthRegisterOptions) error {
 	ctx, span := trc.Start(ctx, "AuthUseCase.Register")
 	defer span.End()
-	exists, err := u.userRepo.IsExistsByEmail(ctx, trc, email)
+	exists, err := u.userRepo.IsExistsByEmail(ctx, trc, opts.Email)
 	if err != nil {
 		return err
 	}
 	if exists {
 		return user.EmailAlreadyExists(errors.New("email already exists"))
 	}
-	usr := user.New(name, email)
+	usr := user.New(user.Config{
+		Name:  opts.Name,
+		Email: opts.Email,
+	})
 	err = u.userRepo.Save(ctx, trc, usr)
 	if err != nil {
 		return err
 	}
 	err = u.eventSrv.Publish(ctx, user.SubjectCreated, &user.EventCreated{
-		Name:      name,
-		Email:     email,
+		Name:      opts.Name,
+		Email:     opts.Email,
 		TempToken: *usr.TempToken,
 	})
 	if err != nil {
@@ -207,10 +246,14 @@ func (u *AuthUseCase) Register(ctx context.Context, trc trace.Tracer, name, emai
 	return nil
 }
 
-func (u *AuthUseCase) RegistrationVerify(ctx context.Context, trc trace.Tracer, token string) error {
+type AuthRegistrationVerifyOptions struct {
+	Token string
+}
+
+func (u *AuthUseCase) RegistrationVerify(ctx context.Context, trc trace.Tracer, opts AuthRegistrationVerifyOptions) error {
 	ctx, span := trc.Start(ctx, "AuthUseCase.RegistrationVerify")
 	defer span.End()
-	usr, err := u.userRepo.FindByToken(ctx, trc, token)
+	usr, err := u.userRepo.FindByToken(ctx, trc, opts.Token)
 	if err != nil {
 		return err
 	}
@@ -218,15 +261,21 @@ func (u *AuthUseCase) RegistrationVerify(ctx context.Context, trc trace.Tracer, 
 	return u.userRepo.Save(ctx, trc, usr)
 }
 
-func (u *AuthUseCase) VerifyAccess(ctx context.Context, trc trace.Tracer, accessTkn, ipAddr string, skipVerify bool) (*token.UserClaim, error) {
+type AuthVerifyAccessOptions struct {
+	AccessTkn  string
+	IpAddr     string
+	SkipVerify bool
+}
+
+func (u *AuthUseCase) VerifyAccess(ctx context.Context, trc trace.Tracer, opts AuthVerifyAccessOptions) (*token.UserClaim, error) {
 	ctx, span := trc.Start(ctx, "AuthUseCase.VerifyAccess")
 	defer span.End()
 	var claims *token.UserClaim
 	var err error
-	if skipVerify {
-		claims, err = u.tokenSrv.Parse(ctx, accessTkn)
+	if opts.SkipVerify {
+		claims, err = u.tokenSrv.Parse(ctx, opts.AccessTkn)
 	} else {
-		claims, err = u.tokenSrv.VerifyAndParse(ctx, accessTkn)
+		claims, err = u.tokenSrv.VerifyAndParse(ctx, opts.AccessTkn)
 	}
 	if err != nil {
 		return nil, rescode.Failed(err)
@@ -238,20 +287,26 @@ func (u *AuthUseCase) VerifyAccess(ctx context.Context, trc trace.Tracer, access
 	if notExists {
 		return nil, auth.InvalidAccess(errors.New("invalid access with token and ip"))
 	}
-	if !session.IsAccessValid(accessTkn, ipAddr) {
+	if !session.IsAccessValid(opts.AccessTkn, opts.IpAddr) {
 		return nil, auth.InvalidAccess(errors.New("invalid access with token and ip"))
 	}
 	return claims, nil
 }
 
-func (u *AuthUseCase) VerifyRefresh(ctx context.Context, trc trace.Tracer, accessTkn, refreshTkn, ipAddr string) (*token.UserClaim, error) {
+type AuthVerifyRefreshOptions struct {
+	AccessTkn  string
+	RefreshTkn string
+	IpAddr     string
+}
+
+func (u *AuthUseCase) VerifyRefresh(ctx context.Context, trc trace.Tracer, opts *AuthVerifyRefreshOptions) (*token.UserClaim, error) {
 	ctx, span := trc.Start(ctx, "AuthUseCase.VerifyRefresh")
 	defer span.End()
-	claims, err := u.tokenSrv.Parse(ctx, refreshTkn)
+	claims, err := u.tokenSrv.Parse(ctx, opts.RefreshTkn)
 	if err != nil {
 		return nil, rescode.Failed(err)
 	}
-	isValid, err := u.tokenSrv.Verify(ctx, refreshTkn)
+	isValid, err := u.tokenSrv.Verify(ctx, opts.RefreshTkn)
 	if err != nil {
 		return nil, rescode.Failed(err)
 	}
@@ -265,7 +320,7 @@ func (u *AuthUseCase) VerifyRefresh(ctx context.Context, trc trace.Tracer, acces
 	if notFound {
 		return nil, auth.InvalidRefreshToken(errors.New("invalid refresh with access token and ip"))
 	}
-	if !session.IsRefreshValid(accessTkn, refreshTkn, ipAddr) {
+	if !session.IsRefreshValid(opts.AccessTkn, opts.RefreshTkn, opts.IpAddr) {
 		return nil, auth.InvalidRefreshToken(errors.New("invalid refresh with access token and ip"))
 	}
 	return claims, nil

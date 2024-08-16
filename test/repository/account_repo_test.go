@@ -16,7 +16,12 @@ func testAccountRepo(ctx context.Context, db *sql.DB, trc trace.Tracer, t *testi
 
 	t.Run("Create", func(t *testing.T) {
 		userId := uuid.New()
-		acc := account.New(userId, "test", "test 0", "TRY")
+		acc := account.New(account.Config{
+			UserId:   userId,
+			Name:     "test",
+			Owner:    "test 0",
+			Currency: "TRY",
+		})
 		err := repo.Save(ctx, trc, acc)
 		if err != nil {
 			t.Fatalf("Could not save account: %s", err)
@@ -28,7 +33,12 @@ func testAccountRepo(ctx context.Context, db *sql.DB, trc trace.Tracer, t *testi
 
 	t.Run("Update", func(t *testing.T) {
 		userId := uuid.New()
-		acc := account.New(userId, "test", "test 0", "TRY")
+		acc := account.New(account.Config{
+			UserId:   userId,
+			Name:     "test",
+			Owner:    "test 0",
+			Currency: "TRY",
+		})
 		err := repo.Save(ctx, trc, acc)
 		if err != nil {
 			t.Fatalf("Could not save account: %s", err)

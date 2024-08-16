@@ -30,11 +30,17 @@ func (v *Verify) IncTryCount() {
 	v.TryCount++
 }
 
-func NewVerify(userId uuid.UUID, deviceId string, locale string) *Verify {
+type VerifyConfig struct {
+	UserId   uuid.UUID
+	DeviceId string
+	Locale   string
+}
+
+func NewVerify(cnf VerifyConfig) *Verify {
 	return &Verify{
-		UserId:    userId,
-		DeviceId:  deviceId,
-		Locale:    locale,
+		UserId:    cnf.UserId,
+		DeviceId:  cnf.DeviceId,
+		Locale:    cnf.Locale,
 		Code:      fmt.Sprintf("%04d", rand.Intn(9999)),
 		TryCount:  0,
 		ExpiresAt: time.Now().Add(5 * time.Minute).Unix(),

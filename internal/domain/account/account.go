@@ -79,13 +79,20 @@ func (a *Account) CanCredit(amount decimal.Decimal) bool {
 	return a.IsAvailable() && amount.GreaterThan(decimal.Zero) && a.Balance.GreaterThanOrEqual(amount)
 }
 
-func New(userId uuid.UUID, name string, owner string, currency string) *Account {
+type Config struct {
+	UserId   uuid.UUID `example:"550e8400-e29b-41d4-a716-446655440000"`
+	Name     string    `example:"My Account"`
+	Owner    string    `example:"John Doe"`
+	Currency string    `example:"EUR"` // ISO 4217 currency code
+}
+
+func New(cnf Config) *Account {
 	return &Account{
-		UserId:   userId,
-		Name:     name,
-		Owner:    owner,
+		UserId:   cnf.UserId,
+		Name:     cnf.Name,
+		Owner:    cnf.Owner,
 		Iban:     iban.New(),
-		Currency: currency,
+		Currency: cnf.Currency,
 		Balance:  decimal.Zero,
 		Status:   StatusActive,
 	}

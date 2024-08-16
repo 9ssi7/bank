@@ -37,7 +37,11 @@ func NewAccessInitialize(authUseCase *usecase.AuthUseCase, trc trace.Tracer, isU
 			return c.Next()
 		}
 		ip := IpMustParse(c)
-		res, err := authUseCase.VerifyAccess(c.UserContext(), trc, t, ip, isUnverified)
+		res, err := authUseCase.VerifyAccess(c.UserContext(), trc, usecase.AuthVerifyAccessOptions{
+			AccessTkn:  t,
+			IpAddr:     ip,
+			SkipVerify: isUnverified,
+		})
 		if err != nil {
 			return err
 		}

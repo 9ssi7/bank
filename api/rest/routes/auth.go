@@ -31,7 +31,9 @@ func (r *AuthRoutes) Register(router fiber.Router) {
 }
 
 func (r *AuthRoutes) loginVerifyCheck(c *fiber.Ctx) error {
-	err := r.AuthUseCase.LoginVerifyCheck(c.UserContext(), r.Tracer, middlewares.VerifyTokenParse(c))
+	err := r.AuthUseCase.LoginVerifyCheck(c.UserContext(), r.Tracer, usecase.AuthLoginVerifyCheckOptions{
+		VerifyToken: middlewares.VerifyTokenParse(c),
+	})
 	if err != nil {
 		return err
 	}
@@ -46,7 +48,10 @@ func (r *AuthRoutes) loginStart(c *fiber.Ctx) error {
 	if err := r.ValidationSrv.ValidateStruct(c.UserContext(), &req); err != nil {
 		return err
 	}
-	res, err := r.AuthUseCase.LoginStart(c.UserContext(), r.Tracer, req.Email, r.Rest.MakeDevice(c))
+	res, err := r.AuthUseCase.LoginStart(c.UserContext(), r.Tracer, usecase.AuthLoginStartOptions{
+		Email:  req.Email,
+		Device: r.Rest.MakeDevice(c),
+	})
 	if err != nil {
 		return err
 	}
@@ -62,7 +67,11 @@ func (r *AuthRoutes) loginVerify(c *fiber.Ctx) error {
 	if err := r.ValidationSrv.ValidateStruct(c.UserContext(), &req); err != nil {
 		return err
 	}
-	access, refresh, err := r.AuthUseCase.LoginVerify(c.Context(), r.Tracer, req.Code, middlewares.VerifyTokenParse(c), r.Rest.MakeDevice(c))
+	access, refresh, err := r.AuthUseCase.LoginVerify(c.Context(), r.Tracer, usecase.AuthLoginVerifyOptions{
+		Code:        req.Code,
+		VerifyToken: middlewares.VerifyTokenParse(c),
+		Device:      r.Rest.MakeDevice(c),
+	})
 	if err != nil {
 		return err
 	}
@@ -76,7 +85,12 @@ func (r *AuthRoutes) loginVerify(c *fiber.Ctx) error {
 }
 
 func (r *AuthRoutes) refreshToken(c *fiber.Ctx) error {
-	access, err := r.AuthUseCase.RefreshToken(c.UserContext(), r.Tracer, middlewares.RefreshMustParse(c).Id, middlewares.AccessGetToken(c), middlewares.RefreshParseToken(c), middlewares.IpMustParse(c))
+	access, err := r.AuthUseCase.RefreshToken(c.UserContext(), r.Tracer, usecase.AuthRefreshTokenOptions{
+		UserId:     middlewares.RefreshMustParse(c).Id,
+		AccessTkn:  middlewares.AccessGetToken(c),
+		RefreshTkn: middlewares.RefreshParseToken(c),
+		IpAddr:     middlewares.IpMustParse(c),
+	})
 	if err != nil {
 		return err
 	}
@@ -92,7 +106,10 @@ func (r *AuthRoutes) register(c *fiber.Ctx) error {
 	if err := r.ValidationSrv.ValidateStruct(c.UserContext(), &req); err != nil {
 		return err
 	}
-	err := r.AuthUseCase.Register(c.UserContext(), r.Tracer, req.Email, req.Name)
+	err := r.AuthUseCase.Register(c.UserContext(), r.Tracer, usecase.AuthRegisterOptions{
+		Name:  req.Name,
+		Email: req.Email,
+	})
 	if err != nil {
 		return err
 	}
@@ -107,7 +124,9 @@ func (r *AuthRoutes) registrationVerify(c *fiber.Ctx) error {
 	if err := r.ValidationSrv.ValidateStruct(c.UserContext(), &req); err != nil {
 		return err
 	}
-	err := r.AuthUseCase.RegistrationVerify(c.UserContext(), r.Tracer, req.Token)
+	err := r.AuthUseCase.RegistrationVerify(c.UserContext(), r.Tracer, usecase.AuthRegistrationVerifyOptions{
+		Token: req.Token,
+	})
 	if err != nil {
 		return err
 	}

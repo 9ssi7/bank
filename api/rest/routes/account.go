@@ -42,7 +42,12 @@ func (r *AccountRoutes) create(c *fiber.Ctx) error {
 		return err
 	}
 	userId := middlewares.AccessMustParse(c).Id
-	res, err := r.AccountUseCase.Create(c.UserContext(), r.Tracer, userId, req.Name, req.Owner, req.Currency)
+	res, err := r.AccountUseCase.Create(c.UserContext(), r.Tracer, usecase.AccountCreateOptions{
+		UserId:   userId,
+		Name:     req.Name,
+		Owner:    req.Owner,
+		Currency: req.Currency,
+	})
 	if err != nil {
 		return err
 	}
@@ -58,7 +63,10 @@ func (r *AccountRoutes) activate(c *fiber.Ctx) error {
 		return err
 	}
 	userId := middlewares.AccessMustParse(c).Id
-	err := r.AccountUseCase.Activate(c.UserContext(), r.Tracer, userId, uuid.MustParse(req.Id))
+	err := r.AccountUseCase.Activate(c.UserContext(), r.Tracer, usecase.AccountActivateOptions{
+		UserId:    userId,
+		AccountId: uuid.MustParse(req.Id),
+	})
 	if err != nil {
 		return err
 	}
@@ -74,7 +82,10 @@ func (r *AccountRoutes) freeze(c *fiber.Ctx) error {
 		return err
 	}
 	userId := middlewares.AccessMustParse(c).Id
-	err := r.AccountUseCase.Freeze(c.UserContext(), r.Tracer, userId, uuid.MustParse(req.Id))
+	err := r.AccountUseCase.Freeze(c.UserContext(), r.Tracer, usecase.AccountFreezeOptions{
+		UserId:    userId,
+		AccountId: uuid.MustParse(req.Id),
+	})
 	if err != nil {
 		return err
 	}
@@ -90,7 +101,10 @@ func (r *AccountRoutes) Suspent(c *fiber.Ctx) error {
 		return err
 	}
 	userId := middlewares.AccessMustParse(c).Id
-	err := r.AccountUseCase.Suspend(c.UserContext(), r.Tracer, userId, uuid.MustParse(req.Id))
+	err := r.AccountUseCase.Suspend(c.UserContext(), r.Tracer, usecase.AccountSuspendOptions{
+		UserId:    userId,
+		AccountId: uuid.MustParse(req.Id),
+	})
 	if err != nil {
 		return err
 	}
@@ -106,7 +120,10 @@ func (r *AccountRoutes) lock(c *fiber.Ctx) error {
 		return err
 	}
 	userId := middlewares.AccessMustParse(c).Id
-	err := r.AccountUseCase.Lock(c.UserContext(), r.Tracer, userId, uuid.MustParse(req.Id))
+	err := r.AccountUseCase.Lock(c.UserContext(), r.Tracer, usecase.AccountLockOptions{
+		UserId:    userId,
+		AccountId: uuid.MustParse(req.Id),
+	})
 	if err != nil {
 		return err
 	}
@@ -125,7 +142,13 @@ func (r *AccountRoutes) credit(c *fiber.Ctx) error {
 		return err
 	}
 	user := middlewares.AccessMustParse(c)
-	err := r.AccountUseCase.Credit(c.UserContext(), r.Tracer, user.Id, req.AccountId, user.Email, user.Name, req.Amount)
+	err := r.AccountUseCase.Credit(c.UserContext(), r.Tracer, usecase.AccountCreditOptions{
+		UserId:    user.Id,
+		AccountId: req.AccountId,
+		UserEmail: user.Email,
+		UserName:  user.Name,
+		Amount:    req.Amount,
+	})
 	if err != nil {
 		return err
 	}
@@ -144,7 +167,13 @@ func (r *AccountRoutes) debit(c *fiber.Ctx) error {
 		return err
 	}
 	user := middlewares.AccessMustParse(c)
-	err := r.AccountUseCase.Debit(c.UserContext(), r.Tracer, user.Id, req.AccountId, user.Email, user.Name, req.Amount)
+	err := r.AccountUseCase.Debit(c.UserContext(), r.Tracer, usecase.AccountDebitOptions{
+		UserId:    user.Id,
+		AccountId: req.AccountId,
+		UserEmail: user.Email,
+		UserName:  user.Name,
+		Amount:    req.Amount,
+	})
 	if err != nil {
 		return err
 	}
@@ -160,7 +189,16 @@ func (r *AccountRoutes) transferMoney(c *fiber.Ctx) error {
 		return err
 	}
 	user := middlewares.AccessMustParse(c)
-	err := r.AccountUseCase.TransferMoney(c.UserContext(), r.Tracer, user.Id, req.AccountId, user.Email, user.Name, req.Amount, req.ToIban, req.ToOwner, req.Description)
+	err := r.AccountUseCase.TransferMoney(c.UserContext(), r.Tracer, usecase.AccountTransferMoneyOptions{
+		UserId:    user.Id,
+		AccountId: req.AccountId,
+		UserEmail: user.Email,
+		UserName:  user.Name,
+		Amount:    req.Amount,
+		ToIban:    req.ToIban,
+		ToOwner:   req.ToOwner,
+		Desc:      req.Description,
+	})
 	if err != nil {
 		return err
 	}
@@ -174,7 +212,10 @@ func (r *AccountRoutes) list(c *fiber.Ctx) error {
 	}
 	pagi.Default()
 	user := middlewares.AccessMustParse(c)
-	res, err := r.AccountUseCase.List(c.UserContext(), r.Tracer, user.Id, pagi)
+	res, err := r.AccountUseCase.List(c.UserContext(), r.Tracer, usecase.AccountListOptions{
+		UserId: user.Id,
+		Pagi:   pagi,
+	})
 	if err != nil {
 		return err
 	}
@@ -199,7 +240,12 @@ func (r *AccountRoutes) listTransactions(c *fiber.Ctx) error {
 		return err
 	}
 	user := middlewares.AccessMustParse(c)
-	res, err := r.AccountUseCase.ListTransactions(c.UserContext(), r.Tracer, user.Id, uuid.MustParse(detail.Id), pagi, filters)
+	res, err := r.AccountUseCase.ListTransactions(c.UserContext(), r.Tracer, usecase.AccountListTransactionsOptions{
+		UserId:    user.Id,
+		AccountId: uuid.MustParse(detail.Id),
+		Pagi:      pagi,
+		Filters:   filters,
+	})
 	if err != nil {
 		return err
 	}

@@ -32,10 +32,15 @@ func (u *User) Disable() {
 	u.IsActive = false
 }
 
-func New(name string, email string) *User {
+type Config struct {
+	Name  string `example:"John Doe"`
+	Email string `example:"john@doe.com"`
+}
+
+func New(cnf Config) *User {
 	return &User{
-		Name:      name,
-		Email:     email,
+		Name:      cnf.Name,
+		Email:     cnf.Email,
 		TempToken: ptr.String(uuid.New().String()),
 	}
 }

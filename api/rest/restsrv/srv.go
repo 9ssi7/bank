@@ -143,7 +143,7 @@ func (h Srv) VerifyTokenExcluded() fiber.Handler {
 	return middlewares.VerifyExcluded
 }
 
-func (h Srv) MakeDevice(ctx *fiber.Ctx) *agent.Device {
+func (h Srv) MakeDevice(ctx *fiber.Ctx) agent.Device {
 	ua := useragent.Parse(ctx.Get("User-Agent"))
 	t := "desktop"
 	if ua.Mobile {
@@ -157,7 +157,7 @@ func (h Srv) MakeDevice(ctx *fiber.Ctx) *agent.Device {
 	if ip == "" {
 		ip = ctx.IP()
 	}
-	return &agent.Device{
+	return agent.Device{
 		Name: ua.Name,
 		Type: t,
 		OS:   ua.OS,

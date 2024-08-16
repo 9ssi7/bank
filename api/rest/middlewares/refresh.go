@@ -31,7 +31,11 @@ func NewRefreshInitialize(authUseCase *usecase.AuthUseCase, trc trace.Tracer) fi
 	return func(c *fiber.Ctx) error {
 		t := refreshGetToken(c)
 		ip := IpMustParse(c)
-		res, err := authUseCase.VerifyRefresh(c.UserContext(), trc, AccessGetToken(c), t, ip)
+		res, err := authUseCase.VerifyRefresh(c.UserContext(), trc, &usecase.AuthVerifyRefreshOptions{
+			AccessTkn:  AccessGetToken(c),
+			RefreshTkn: t,
+			IpAddr:     ip,
+		})
 		if err != nil {
 			return err
 		}

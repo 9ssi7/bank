@@ -8,6 +8,10 @@ import (
 	"github.com/google/uuid"
 )
 
+type ContextKey string
+
+const DeviceIDKey ContextKey = "deviceId"
+
 func NewDeviceId(domain string) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		deviceId := c.Cookies("device_id")
@@ -22,11 +26,8 @@ func NewDeviceId(domain string) fiber.Handler {
 			})
 		}
 		c.Locals("deviceId", deviceId)
-		c.SetUserContext(context.WithValue(c.UserContext(), "deviceId", deviceId))
+
+		c.SetUserContext(context.WithValue(c.UserContext(), DeviceIDKey, deviceId))
 		return c.Next()
 	}
-}
-
-func DeviceIdParse(c *fiber.Ctx) string {
-	return c.Locals("deviceId").(string)
 }

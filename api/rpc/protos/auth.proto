@@ -1,0 +1,59 @@
+syntax = "proto3";
+package com.ssibank.Auth.v1;
+option go_package = "./api/rpc/generated/auth/v1";
+
+message Device {
+    string name = 1;
+    string type = 2;
+    string os = 3;
+    string ip = 4;
+}
+
+message LoginStartRequest {
+    string email = 1;
+    Device device = 2;
+}
+
+message LoginStartResponse {
+    string token = 1;
+}
+
+message LoginVerifyRequest {
+    string token = 1;
+    string code = 2;
+}
+
+message LoginVerifyResponse {
+    string access_token = 1;
+    string refresh_token = 2;
+}
+
+message RefreshTokenRequest {
+    string refresh_token = 1;
+}
+
+message RefreshTokenResponse {
+    string access_token = 1;
+    string refresh_token = 2;
+}
+
+message RegisterRequest {
+    string name = 1;
+    string email = 2;
+}
+
+message RegisterResponse {}
+
+message RegistrationVerifyRequest {
+    string token = 1;
+}
+
+message RegistrationVerifyResponse {}
+
+service Auth {
+    rpc LoginStart(LoginStartRequest) returns (LoginStartResponse);
+    rpc LoginVerify(LoginVerifyRequest) returns (LoginVerifyResponse);
+    rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
+    rpc Register(RegisterRequest) returns (RegisterResponse);
+    rpc RegistrationVerify(RegistrationVerifyRequest) returns (RegistrationVerifyResponse);
+}

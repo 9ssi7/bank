@@ -27,11 +27,11 @@ func testTransactionRepo(ctx context.Context, db *sql.DB, trc trace.Tracer, t *t
 			Description: "test",
 			Kind:        account.TransactionKindDeposit,
 		})
-		err := repo.Save(ctx, trc, tx)
+		err := repo.Save(ctx, trc, account.TransactionSaveOpts{Transaction: tx})
 		if err != nil {
 			t.Fatalf("Could not save transaction: %s", err)
 		}
-		if tx.Id == uuid.Nil {
+		if tx.ID == uuid.Nil {
 			t.Fatalf("Transaction id is empty")
 		}
 	})
@@ -46,13 +46,17 @@ func testTransactionRepo(ctx context.Context, db *sql.DB, trc trace.Tracer, t *t
 			Description: "test",
 			Kind:        account.TransactionKindDeposit,
 		})
-		err := repo.Save(ctx, trc, tx)
+		err := repo.Save(ctx, trc, account.TransactionSaveOpts{Transaction: tx})
 		if err != nil {
 			t.Fatalf("Could not save transaction: %s", err)
 		}
 		pagi := &list.PagiRequest{Limit: ptr.Int(10), Page: ptr.Int(1)}
 		filters := &account.TransactionFilters{}
-		_, err = repo.Filter(ctx, trc, accountId, pagi, filters)
+		_, err = repo.Filter(ctx, trc, account.TransactionFilterOpts{
+			AccountId: accountId,
+			Pagi:      pagi,
+			Filters:   filters,
+		})
 		if err != nil {
 			t.Fatalf("Could not filter transaction: %s", err)
 		}

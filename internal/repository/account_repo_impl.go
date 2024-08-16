@@ -25,25 +25,25 @@ func NewAccountRepo(db *sql.DB) *AccountSqlRepo {
 	}
 }
 
-func (r *AccountSqlRepo) Save(ctx context.Context, trc trace.Tracer, account *account.Account) error {
-	ctx, span := trc.Start(ctx, "AccountSqlRepo.Save")
+func (r *AccountSqlRepo) Save(ctx context.Context, t trace.Tracer, opts account.SaveOpts) error {
+	ctx, span := t.Start(ctx, "AccountSqlRepo.Save")
 	defer span.End()
 	r.syncRepo.Lock()
 	defer r.syncRepo.Unlock()
 	q := "INSERT INTO accounts (id, user_id, iban, owner, balance, currency) VALUES ($1, $2, $3, $4, $5, $6)"
-	if account.Id == uuid.Nil {
-		account.Id = uuid.New()
+	if opts.Acount.ID == uuid.Nil {
+		opts.Acount.ID = uuid.New()
 		q = "UPDATE accounts SET user_id = $2, iban = $3, owner = $4, balance = $5, currency = $6 WHERE id = $1"
 	}
-	_, err := r.adapter.GetCurrent().ExecContext(ctx, q, account.Id, account.UserId, account.Iban, account.Owner, account.Balance, account.Currency)
+	_, err := r.adapter.GetCurrent().ExecContext(ctx, q, opts.Acount.ID, opts.Acount.UserId, opts.Acount.Iban, opts.Acount.Owner, opts.Acount.Balance, opts.Acount.Currency)
 	return err
 }
 
-func (r *AccountSqlRepo) ListByUserId(ctx context.Context, trc trace.Tracer, userId uuid.UUID, pagi *list.PagiRequest) (*list.PagiResponse[*account.Account], error) {
-	ctx, span := trc.Start(ctx, "AccountSqlRepo.ListByUserId")
+func (r *AccountSqlRepo) ListByUserId(ctx context.Context, t trace.Tracer, opts account.ListByUserIdOpts) (*list.PagiResponse[*account.Account], error) {
+	ctx, span := t.Start(ctx, "AccountSqlRepo.ListByUserId")
 	defer span.End()
 	var total int64
-	res, err := r.adapter.GetCurrent().QueryContext(ctx, "SELECT COUNT(*) FROM accounts WHERE user_id = $1", userId)
+	res, err := r.adapter.GetCurrent().QueryContext(ctx, "SELECT COUNT(*) FROM accounts WHERE user_id = $1", opts.UserId)
 	if err != nil {
 		return nil, err
 	}
@@ -52,66 +52,66 @@ func (r *AccountSqlRepo) ListByUserId(ctx context.Context, trc trace.Tracer, use
 	}
 	res.Close()
 	accounts := make([]*account.Account, 0)
-	res, err = r.adapter.GetCurrent().QueryContext(ctx, "SELECT * FROM accounts WHERE user_id = $1 LIMIT $2 OFFSET $3", userId, *pagi.Limit, pagi.Offset())
+	res, err = r.adapter.GetCurrent().QueryContext(ctx, "SELECT * FROM accounts WHERE user_id = $1 LIMIT $2 OFFSET $3", opts.UserId, *opts.Pagi.Limit, opts.Pagi.Offset())
 	if err != nil {
 		return nil, err
 	}
 	for res.Next() {
 		var a account.Account
-		res.Scan(&a.Id, &a.UserId, &a.Iban, &a.Owner, &a.Balance, &a.Currency)
+		res.Scan(&a.ID, &a.UserId, &a.Iban, &a.Owner, &a.Balance, &a.Currency)
 		accounts = append(accounts, &a)
 	}
 	res.Close()
 	return &list.PagiResponse[*account.Account]{
 		List:          accounts,
 		Total:         total,
-		Limit:         *pagi.Limit,
-		Page:          *pagi.Page,
+		Limit:         *opts.Pagi.Limit,
+		Page:          *opts.Pagi.Page,
 		FilteredTotal: total,
-		TotalPage:     pagi.TotalPage(total),
+		TotalPage:     opts.Pagi.TotalPage(total),
 	}, nil
 }
 
-func (r *AccountSqlRepo) FindByIbanAndOwner(ctx context.Context, trc trace.Tracer, iban string, owner string) (*account.Account, error) {
-	ctx, span := trc.Start(ctx, "AccountSqlRepo.FindByIbanAndOwner")
+func (r *AccountSqlRepo) FindByIbanAndOwner(ctx context.Context, t trace.Tracer, opts account.FindByIbanAndOwnerOpts) (*account.Account, error) {
+	ctx, span := t.Start(ctx, "AccountSqlRepo.FindByIbanAndOwner")
 	defer span.End()
 	var a account.Account
-	res, err := r.adapter.GetCurrent().QueryContext(ctx, "SELECT * FROM accounts WHERE iban = $1 AND owner = $2", iban, owner)
+	res, err := r.adapter.GetCurrent().QueryContext(ctx, "SELECT * FROM accounts WHERE iban = $1 AND owner = $2", opts.Iban, opts.Owner)
 	if err != nil {
 		return nil, err
 	}
 	if res.Next() {
-		res.Scan(&a.Id, &a.UserId, &a.Iban, &a.Owner, &a.Balance, &a.Currency)
+		res.Scan(&a.ID, &a.UserId, &a.Iban, &a.Owner, &a.Balance, &a.Currency)
 	}
 	res.Close()
 	return &a, nil
 }
 
-func (r *AccountSqlRepo) FindByUserIdAndId(ctx context.Context, trc trace.Tracer, userId uuid.UUID, id uuid.UUID) (*account.Account, error) {
-	ctx, span := trc.Start(ctx, "AccountSqlRepo.FindByUserIdAndId")
+func (r *AccountSqlRepo) FindByUserIdAndId(ctx context.Context, t trace.Tracer, opts account.FindByUserIdAndIdOpts) (*account.Account, error) {
+	ctx, span := t.Start(ctx, "AccountSqlRepo.FindByUserIdAndId")
 	defer span.End()
 	var a account.Account
-	res, err := r.adapter.GetCurrent().QueryContext(ctx, "SELECT * FROM accounts WHERE user_id = $1 AND id = $2", userId, id)
+	res, err := r.adapter.GetCurrent().QueryContext(ctx, "SELECT * FROM accounts WHERE user_id = $1 AND id = $2", opts.UserId, opts.ID)
 	if err != nil {
 		return nil, err
 	}
 	if res.Next() {
-		res.Scan(&a.Id, &a.UserId, &a.Iban, &a.Owner, &a.Balance, &a.Currency)
+		res.Scan(&a.ID, &a.UserId, &a.Iban, &a.Owner, &a.Balance, &a.Currency)
 	}
 	res.Close()
 	return &a, nil
 }
 
-func (r *AccountSqlRepo) FindById(ctx context.Context, trc trace.Tracer, id uuid.UUID) (*account.Account, error) {
-	ctx, span := trc.Start(ctx, "AccountSqlRepo.FindByUserIdAndId")
+func (r *AccountSqlRepo) FindById(ctx context.Context, t trace.Tracer, opts account.FindByIdOpts) (*account.Account, error) {
+	ctx, span := t.Start(ctx, "AccountSqlRepo.FindByUserIdAndId")
 	defer span.End()
 	var a account.Account
-	res, err := r.adapter.GetCurrent().QueryContext(ctx, "SELECT * FROM accounts WHERE id = $1", id)
+	res, err := r.adapter.GetCurrent().QueryContext(ctx, "SELECT * FROM accounts WHERE id = $1", opts.ID)
 	if err != nil {
 		return nil, err
 	}
 	if res.Next() {
-		res.Scan(&a.Id, &a.UserId, &a.Iban, &a.Owner, &a.Balance, &a.Currency)
+		res.Scan(&a.ID, &a.UserId, &a.Iban, &a.Owner, &a.Balance, &a.Currency)
 	}
 	res.Close()
 	return &a, nil

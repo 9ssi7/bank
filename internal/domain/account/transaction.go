@@ -32,7 +32,7 @@ const (
 )
 
 type TransactionListItem struct {
-	Id          uuid.UUID  `json:"id"`
+	ID          uuid.UUID  `json:"id"`
 	AccountId   *uuid.UUID `json:"account_id,omitempty"`
 	AccountName *string    `json:"account_name,omitempty"`
 	Amount      string     `json:"amount"`
@@ -43,7 +43,7 @@ type TransactionListItem struct {
 }
 
 type Transaction struct {
-	Id          uuid.UUID       `json:"id"`
+	ID          uuid.UUID       `json:"id"`
 	SenderId    uuid.UUID       `json:"sender_id"`
 	ReceiverId  uuid.UUID       `json:"receiver_id"`
 	Amount      decimal.Decimal `json:"amount"`

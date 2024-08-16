@@ -6,65 +6,53 @@ import (
 	"time"
 
 	"github.com/9ssi7/bank/internal/domain/account"
+	"github.com/9ssi7/bank/internal/domain/user"
 	"github.com/9ssi7/bank/internal/infra/eventer"
 	"github.com/9ssi7/bank/pkg/list"
 	"github.com/9ssi7/bank/pkg/rescode"
-	"github.com/9ssi7/bank/pkg/txadapter"
 	"github.com/9ssi7/txn"
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 	"go.opentelemetry.io/otel/trace"
 )
 
-type AccountRepo interface {
-	txadapter.Repo
-	Save(ctx context.Context, trc trace.Tracer, account *account.Account) error
-	ListByUserId(ctx context.Context, trc trace.Tracer, userId uuid.UUID, pagi *list.PagiRequest) (*list.PagiResponse[*account.Account], error)
-	FindByIbanAndOwner(ctx context.Context, trc trace.Tracer, iban string, owner string) (*account.Account, error)
-	FindByUserIdAndId(ctx context.Context, trc trace.Tracer, userId uuid.UUID, id uuid.UUID) (*account.Account, error)
-	FindById(ctx context.Context, trc trace.Tracer, id uuid.UUID) (*account.Account, error)
-}
-
-type TransactionRepo interface {
-	txadapter.Repo
-	Save(ctx context.Context, trc trace.Tracer, transaction *account.Transaction) error
-	Filter(ctx context.Context, trc trace.Tracer, accountId uuid.UUID, pagi *list.PagiRequest, filters *account.TransactionFilters) (*list.PagiResponse[*account.Transaction], error)
-}
-
 type AccountUseCase struct {
 	eventSrv        eventer.Srv
-	accountRepo     AccountRepo
-	transactionRepo TransactionRepo
-	userRepo        UserRepo
+	accountRepo     account.Repo
+	transactionRepo account.TransactionRepo
+	userRepo        user.Repo
 }
 
-type AccountActivateOptions struct {
+type AccountActivateOpts struct {
 	UserId    uuid.UUID
 	AccountId uuid.UUID
 }
 
-func (u *AccountUseCase) Activate(ctx context.Context, trc trace.Tracer, opts AccountActivateOptions) error {
+func (u *AccountUseCase) Activate(ctx context.Context, trc trace.Tracer, opts AccountActivateOpts) error {
 	ctx, span := trc.Start(ctx, "AccountUseCase.Activate")
 	defer span.End()
-	acc, err := u.accountRepo.FindByUserIdAndId(ctx, trc, opts.UserId, opts.AccountId)
+	acc, err := u.accountRepo.FindByUserIdAndId(ctx, trc, account.FindByUserIdAndIdOpts{
+		ID:     opts.AccountId,
+		UserId: opts.UserId,
+	})
 	if err != nil {
 		return err
 	}
 	acc.Activate()
-	if err := u.accountRepo.Save(ctx, trc, acc); err != nil {
+	if err := u.accountRepo.Save(ctx, trc, account.SaveOpts{Acount: acc}); err != nil {
 		return err
 	}
 	return nil
 }
 
-type AccountCreateOptions struct {
+type AccountCreateOpts struct {
 	UserId   uuid.UUID
 	Name     string
 	Owner    string
 	Currency string
 }
 
-func (u *AccountUseCase) Create(ctx context.Context, trc trace.Tracer, opts AccountCreateOptions) (*uuid.UUID, error) {
+func (u *AccountUseCase) Create(ctx context.Context, trc trace.Tracer, opts AccountCreateOpts) (*uuid.UUID, error) {
 	ctx, span := trc.Start(ctx, "AccountUseCase.Create")
 	defer span.End()
 	acc := account.New(account.Config{
@@ -73,13 +61,13 @@ func (u *AccountUseCase) Create(ctx context.Context, trc trace.Tracer, opts Acco
 		Owner:    opts.Owner,
 		Currency: opts.Currency,
 	})
-	if err := u.accountRepo.Save(ctx, trc, acc); err != nil {
+	if err := u.accountRepo.Save(ctx, trc, account.SaveOpts{Acount: acc}); err != nil {
 		return nil, err
 	}
-	return &acc.Id, nil
+	return &acc.ID, nil
 }
 
-type AccountCreditOptions struct {
+type AccountCreditOpts struct {
 	UserId    uuid.UUID
 	AccountId uuid.UUID
 	UserEmail string
@@ -87,10 +75,13 @@ type AccountCreditOptions struct {
 	Amount    string
 }
 
-func (u *AccountUseCase) Credit(ctx context.Context, trc trace.Tracer, opts AccountCreditOptions) error {
+func (u *AccountUseCase) Credit(ctx context.Context, trc trace.Tracer, opts AccountCreditOpts) error {
 	ctx, span := trc.Start(ctx, "AccountUseCase.Credit")
 	defer span.End()
-	acc, err := u.accountRepo.FindByUserIdAndId(ctx, trc, opts.UserId, opts.AccountId)
+	acc, err := u.accountRepo.FindByUserIdAndId(ctx, trc, account.FindByUserIdAndIdOpts{
+		UserId: opts.UserId,
+		ID:     opts.AccountId,
+	})
 	if err != nil {
 		return err
 	}
@@ -102,17 +93,17 @@ func (u *AccountUseCase) Credit(ctx context.Context, trc trace.Tracer, opts Acco
 		return rescode.Failed(err)
 	}
 	acc.Credit(amountDec)
-	if err := u.accountRepo.Save(ctx, trc, acc); err != nil {
+	if err := u.accountRepo.Save(ctx, trc, account.SaveOpts{Acount: acc}); err != nil {
 		return err
 	}
 	tx := account.NewTransaction(account.TransactionConfig{
-		SenderId:    acc.Id,
-		ReceiverId:  acc.Id, // receiver id is the same as sender id because it is a deposit
+		SenderId:    acc.ID,
+		ReceiverId:  acc.ID, // receiver id is the same as sender id because it is a deposit
 		Amount:      amountDec,
 		Description: "Load balance",
 		Kind:        account.TransactionKindDeposit,
 	})
-	if err := u.transactionRepo.Save(ctx, trc, tx); err != nil {
+	if err := u.transactionRepo.Save(ctx, trc, account.TransactionSaveOpts{Transaction: tx}); err != nil {
 		return err
 	}
 	err = u.eventSrv.Publish(ctx, account.SubjectTransferIncoming, &account.EventTranfserIncoming{
@@ -129,7 +120,7 @@ func (u *AccountUseCase) Credit(ctx context.Context, trc trace.Tracer, opts Acco
 	return nil
 }
 
-type AccountDebitOptions struct {
+type AccountDebitOpts struct {
 	UserId    uuid.UUID
 	AccountId uuid.UUID
 	UserEmail string
@@ -137,10 +128,10 @@ type AccountDebitOptions struct {
 	Amount    string
 }
 
-func (u *AccountUseCase) Debit(ctx context.Context, trc trace.Tracer, opts AccountDebitOptions) error {
+func (u *AccountUseCase) Debit(ctx context.Context, trc trace.Tracer, opts AccountDebitOpts) error {
 	ctx, span := trc.Start(ctx, "AccountUseCase.Debit")
 	defer span.End()
-	acc, err := u.accountRepo.FindByUserIdAndId(ctx, trc, opts.UserId, opts.AccountId)
+	acc, err := u.accountRepo.FindByUserIdAndId(ctx, trc, account.FindByUserIdAndIdOpts{UserId: opts.UserId, ID: opts.AccountId})
 	if err != nil {
 		return err
 	}
@@ -155,17 +146,17 @@ func (u *AccountUseCase) Debit(ctx context.Context, trc trace.Tracer, opts Accou
 		return account.BalanceInsufficient(errors.New("sender account balance insufficient"))
 	}
 	acc.Debit(amountDec)
-	if err := u.accountRepo.Save(ctx, trc, acc); err != nil {
+	if err := u.accountRepo.Save(ctx, trc, account.SaveOpts{Acount: acc}); err != nil {
 		return err
 	}
-	t := account.NewTransaction(account.TransactionConfig{
-		SenderId:    acc.Id,
-		ReceiverId:  acc.Id, // receiver id is the same as sender id because it is a withdrawal
+	tx := account.NewTransaction(account.TransactionConfig{
+		SenderId:    acc.ID,
+		ReceiverId:  acc.ID, // receiver id is the same as sender id because it is a withdrawal
 		Amount:      amountDec,
 		Description: "Withdraw balance",
 		Kind:        account.TransactionKindWithdrawal,
 	})
-	if err := u.transactionRepo.Save(ctx, trc, t); err != nil {
+	if err := u.transactionRepo.Save(ctx, trc, account.TransactionSaveOpts{Transaction: tx}); err != nil {
 		return err
 	}
 	err = u.eventSrv.Publish(ctx, account.SubjectTransferOutgoing, &account.EventTranfserOutgoing{
@@ -182,64 +173,64 @@ func (u *AccountUseCase) Debit(ctx context.Context, trc trace.Tracer, opts Accou
 	return nil
 }
 
-type AccountFreezeOptions struct {
+type AccountFreezeOpts struct {
 	UserId    uuid.UUID
 	AccountId uuid.UUID
 }
 
-func (u *AccountUseCase) Freeze(ctx context.Context, trc trace.Tracer, opts AccountFreezeOptions) error {
+func (u *AccountUseCase) Freeze(ctx context.Context, trc trace.Tracer, opts AccountFreezeOpts) error {
 	ctx, span := trc.Start(ctx, "AccountUseCase.Freeze")
 	defer span.End()
-	acc, err := u.accountRepo.FindByUserIdAndId(ctx, trc, opts.UserId, opts.AccountId)
+	acc, err := u.accountRepo.FindByUserIdAndId(ctx, trc, account.FindByUserIdAndIdOpts{UserId: opts.UserId, ID: opts.AccountId})
 	if err != nil {
 		return err
 	}
 	acc.Freeze()
-	if err := u.accountRepo.Save(ctx, trc, acc); err != nil {
+	if err := u.accountRepo.Save(ctx, trc, account.SaveOpts{Acount: acc}); err != nil {
 		return err
 	}
 	return nil
 }
 
-type AccountLockOptions struct {
+type AccountLockOpts struct {
 	UserId    uuid.UUID
 	AccountId uuid.UUID
 }
 
-func (u *AccountUseCase) Lock(ctx context.Context, trc trace.Tracer, opts AccountLockOptions) error {
+func (u *AccountUseCase) Lock(ctx context.Context, trc trace.Tracer, opts AccountLockOpts) error {
 	ctx, span := trc.Start(ctx, "AccountUseCase.Lock")
 	defer span.End()
-	acc, err := u.accountRepo.FindByUserIdAndId(ctx, trc, opts.UserId, opts.AccountId)
+	acc, err := u.accountRepo.FindByUserIdAndId(ctx, trc, account.FindByUserIdAndIdOpts{UserId: opts.UserId, ID: opts.AccountId})
 	if err != nil {
 		return err
 	}
 	acc.Lock()
-	if err := u.accountRepo.Save(ctx, trc, acc); err != nil {
+	if err := u.accountRepo.Save(ctx, trc, account.SaveOpts{Acount: acc}); err != nil {
 		return err
 	}
 	return nil
 }
 
-type AccountSuspendOptions struct {
+type AccountSuspendOpts struct {
 	UserId    uuid.UUID
 	AccountId uuid.UUID
 }
 
-func (u *AccountUseCase) Suspend(ctx context.Context, trc trace.Tracer, opts AccountSuspendOptions) error {
+func (u *AccountUseCase) Suspend(ctx context.Context, trc trace.Tracer, opts AccountSuspendOpts) error {
 	ctx, span := trc.Start(ctx, "AccountUseCase.Suspend")
 	defer span.End()
-	acc, err := u.accountRepo.FindByUserIdAndId(ctx, trc, opts.UserId, opts.AccountId)
+	acc, err := u.accountRepo.FindByUserIdAndId(ctx, trc, account.FindByUserIdAndIdOpts{UserId: opts.UserId, ID: opts.AccountId})
 	if err != nil {
 		return err
 	}
 	acc.Suspend()
-	if err := u.accountRepo.Save(ctx, trc, acc); err != nil {
+	if err := u.accountRepo.Save(ctx, trc, account.SaveOpts{Acount: acc}); err != nil {
 		return err
 	}
 	return nil
 }
 
-type AccountTransferMoneyOptions struct {
+type AccountTransferMoneyOpts struct {
 	UserId    uuid.UUID
 	AccountId uuid.UUID
 	UserEmail string
@@ -250,7 +241,7 @@ type AccountTransferMoneyOptions struct {
 	Desc      string
 }
 
-func (u *AccountUseCase) TransferMoney(ctx context.Context, trc trace.Tracer, opts AccountTransferMoneyOptions) error {
+func (u *AccountUseCase) TransferMoney(ctx context.Context, trc trace.Tracer, opts AccountTransferMoneyOpts) error {
 	ctx, span := trc.Start(ctx, "AccountUseCase.TransferMoney")
 	defer span.End()
 
@@ -264,11 +255,11 @@ func (u *AccountUseCase) TransferMoney(ctx context.Context, trc trace.Tracer, op
 		txn.Rollback(ctx)
 		return err
 	}
-	toAccount, err := u.accountRepo.FindByIbanAndOwner(ctx, trc, opts.ToIban, opts.ToOwner)
+	toAccount, err := u.accountRepo.FindByIbanAndOwner(ctx, trc, account.FindByIbanAndOwnerOpts{Iban: opts.ToIban, Owner: opts.ToOwner})
 	if err != nil {
 		return onError(ctx, account.NotFound(err))
 	}
-	fromAccount, err := u.accountRepo.FindByUserIdAndId(ctx, trc, opts.UserId, opts.AccountId)
+	fromAccount, err := u.accountRepo.FindByUserIdAndId(ctx, trc, account.FindByUserIdAndIdOpts{UserId: opts.UserId, ID: opts.AccountId})
 	if err != nil {
 		return onError(ctx, err)
 	}
@@ -278,7 +269,7 @@ func (u *AccountUseCase) TransferMoney(ctx context.Context, trc trace.Tracer, op
 	if !toAccount.IsAvailable() {
 		return onError(ctx, account.ToAccNotAvailable(errors.New("to account not available")))
 	}
-	if fromAccount.Id == toAccount.Id {
+	if fromAccount.ID == toAccount.ID {
 		return onError(ctx, account.TransferToSameAccount(errors.New("transfer to same account")))
 	}
 	if fromAccount.Currency != toAccount.Currency {
@@ -299,34 +290,34 @@ func (u *AccountUseCase) TransferMoney(ctx context.Context, trc trace.Tracer, op
 	}
 
 	tx := account.NewTransaction(account.TransactionConfig{
-		SenderId:    fromAccount.Id,
-		ReceiverId:  toAccount.Id,
+		SenderId:    fromAccount.ID,
+		ReceiverId:  toAccount.ID,
 		Amount:      amountToTransfer,
 		Description: opts.Desc,
 		Kind:        account.TransactionKindTransfer,
 	})
-	if err := u.transactionRepo.Save(ctx, trc, tx); err != nil {
+	if err := u.transactionRepo.Save(ctx, trc, account.TransactionSaveOpts{Transaction: tx}); err != nil {
 		return onError(ctx, err)
 	}
 	if !amountToPay.Equal(amountToTransfer) {
 		feeTx := account.NewTransaction(account.TransactionConfig{
-			SenderId:    fromAccount.Id,
-			ReceiverId:  fromAccount.Id, // receiver id is the same as sender id because it is a fee
+			SenderId:    fromAccount.ID,
+			ReceiverId:  fromAccount.ID, // receiver id is the same as sender id because it is a fee
 			Amount:      decimal.NewFromInt(int64(1)),
 			Description: "Process Fee",
 			Kind:        account.TransactionKindFee,
 		})
-		if err := u.transactionRepo.Save(ctx, trc, feeTx); err != nil {
+		if err := u.transactionRepo.Save(ctx, trc, account.TransactionSaveOpts{Transaction: feeTx}); err != nil {
 			return onError(ctx, err)
 		}
 	}
 
 	fromAccount.Debit(amountToPay)
-	if err := u.accountRepo.Save(ctx, trc, fromAccount); err != nil {
+	if err := u.accountRepo.Save(ctx, trc, account.SaveOpts{Acount: fromAccount}); err != nil {
 		return onError(ctx, err)
 	}
 	toAccount.Credit(amountToTransfer)
-	if err := u.accountRepo.Save(ctx, trc, toAccount); err != nil {
+	if err := u.accountRepo.Save(ctx, trc, account.SaveOpts{Acount: toAccount}); err != nil {
 		return onError(ctx, err)
 	}
 
@@ -336,7 +327,7 @@ func (u *AccountUseCase) TransferMoney(ctx context.Context, trc trace.Tracer, op
 	}
 
 	if toAccount.UserId != fromAccount.UserId {
-		toUser, err := u.userRepo.FindById(ctx, trc, toAccount.UserId)
+		toUser, err := u.userRepo.FindById(ctx, trc, user.FindByIdOpts{ID: toAccount.UserId})
 		if err != nil {
 			return err
 		}
@@ -366,22 +357,22 @@ func (u *AccountUseCase) TransferMoney(ctx context.Context, trc trace.Tracer, op
 	return nil
 }
 
-type AccountListOptions struct {
+type AccountListOpts struct {
 	UserId uuid.UUID
 	Pagi   list.PagiRequest
 }
 
-func (u *AccountUseCase) List(ctx context.Context, trc trace.Tracer, opts AccountListOptions) (*list.PagiResponse[*account.AccountListItem], error) {
+func (u *AccountUseCase) List(ctx context.Context, trc trace.Tracer, opts AccountListOpts) (*list.PagiResponse[*account.AccountListItem], error) {
 	ctx, span := trc.Start(ctx, "AccountUseCase.List")
 	defer span.End()
-	accounts, err := u.accountRepo.ListByUserId(ctx, trc, opts.UserId, &opts.Pagi)
+	accounts, err := u.accountRepo.ListByUserId(ctx, trc, account.ListByUserIdOpts{UserId: opts.UserId, Pagi: &opts.Pagi})
 	if err != nil {
 		return nil, err
 	}
 	result := make([]*account.AccountListItem, 0, len(accounts.List))
 	for _, a := range accounts.List {
 		result = append(result, &account.AccountListItem{
-			Id:       a.Id,
+			ID:       a.ID,
 			Name:     a.Name,
 			Owner:    a.Owner,
 			Iban:     a.Iban,
@@ -400,28 +391,32 @@ func (u *AccountUseCase) List(ctx context.Context, trc trace.Tracer, opts Accoun
 	}, nil
 }
 
-type AccountListTransactionsOptions struct {
+type AccountListTransactionsOpts struct {
 	UserId    uuid.UUID
 	AccountId uuid.UUID
 	Pagi      list.PagiRequest
 	Filters   account.TransactionFilters
 }
 
-func (u *AccountUseCase) ListTransactions(ctx context.Context, trc trace.Tracer, opts AccountListTransactionsOptions) (*list.PagiResponse[*account.TransactionListItem], error) {
+func (u *AccountUseCase) ListTransactions(ctx context.Context, trc trace.Tracer, opts AccountListTransactionsOpts) (*list.PagiResponse[*account.TransactionListItem], error) {
 	ctx, span := trc.Start(ctx, "AccountUseCase.ListTransactions")
 	defer span.End()
-	_, err := u.accountRepo.FindByUserIdAndId(ctx, trc, opts.UserId, opts.AccountId)
+	_, err := u.accountRepo.FindByUserIdAndId(ctx, trc, account.FindByUserIdAndIdOpts{UserId: opts.UserId, ID: opts.AccountId})
 	if err != nil {
 		return nil, err
 	}
-	txs, err := u.transactionRepo.Filter(ctx, trc, opts.AccountId, &opts.Pagi, &opts.Filters)
+	txs, err := u.transactionRepo.Filter(ctx, trc, account.TransactionFilterOpts{
+		AccountId: opts.AccountId,
+		Pagi:      &opts.Pagi,
+		Filters:   &opts.Filters,
+	})
 	if err != nil {
 		return nil, err
 	}
 	result := make([]*account.TransactionListItem, 0, len(txs.List))
 	for _, e := range txs.List {
 		d := &account.TransactionListItem{
-			Id:          e.Id,
+			ID:          e.ID,
 			Amount:      e.Amount.String(),
 			Description: e.Description,
 			Kind:        e.Kind.String(),
@@ -437,7 +432,7 @@ func (u *AccountUseCase) ListTransactions(ctx context.Context, trc trace.Tracer,
 			d.AccountId = &e.SenderId
 		}
 		if d.AccountId != nil {
-			a, err := u.accountRepo.FindById(ctx, trc, *d.AccountId)
+			a, err := u.accountRepo.FindById(ctx, trc, account.FindByIdOpts{ID: *d.AccountId})
 			if err != nil {
 				return nil, err
 			}

@@ -9,7 +9,7 @@ type AccountCreateReq struct {
 }
 
 type AccountDetailReq struct {
-	Id string `json:"account_id" params:"account_id" validate:"required,uuid"`
+	ID string `json:"account_id" params:"account_id" validate:"required,uuid"`
 }
 
 type AccountCreditReq struct {

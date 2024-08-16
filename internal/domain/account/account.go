@@ -22,7 +22,7 @@ const (
 )
 
 type AccountListItem struct {
-	Id       uuid.UUID `json:"id"`
+	ID       uuid.UUID `json:"id"`
 	Name     string    `json:"name"`
 	Owner    string    `json:"owner"`
 	Iban     string    `json:"iban"`
@@ -32,7 +32,7 @@ type AccountListItem struct {
 }
 
 type Account struct {
-	Id     uuid.UUID `json:"id"`
+	ID     uuid.UUID `json:"id"`
 	UserId uuid.UUID `json:"user_id"`
 	Name   string    `json:"name"`
 	Owner  string    `json:"owner"`

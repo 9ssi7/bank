@@ -100,7 +100,7 @@ func TestSign(t *testing.T) {
 	}
 	userClaim := &UserClaim{
 		User: User{
-			Id:    uuid.New(),
+			ID:    uuid.New(),
 			Name:  "test user",
 			Email: "test@example.com",
 		},
@@ -125,7 +125,7 @@ func TestParse(t *testing.T) {
 	}
 	// Valid token
 	userClaim := &UserClaim{
-		User:      User{Id: uuid.New()},
+		User:      User{ID: uuid.New()},
 		ExpiresIn: time.Now().Add(time.Hour).Unix(),
 	}
 	tokenString, _ := jwtInstance.Sign(userClaim)
@@ -151,7 +151,7 @@ func TestVerify(t *testing.T) {
 		{
 			name: "Default",
 			claim: &UserClaim{
-				User:      User{Id: uuid.New()},
+				User:      User{ID: uuid.New()},
 				ExpiresIn: time.Now().Add(time.Hour).Unix(),
 				RegisteredClaims: jwt.RegisteredClaims{
 					ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
@@ -161,9 +161,9 @@ func TestVerify(t *testing.T) {
 			isValid:   true,
 		},
 		{
-			name: "Invalid Id",
+			name: "Invalid ID",
 			claim: &UserClaim{
-				User:      User{Id: uuid.Nil},
+				User:      User{ID: uuid.Nil},
 				ExpiresIn: time.Now().Add(time.Hour).Unix(),
 				RegisteredClaims: jwt.RegisteredClaims{
 					ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
@@ -175,7 +175,7 @@ func TestVerify(t *testing.T) {
 		{
 			name: "Expired",
 			claim: &UserClaim{
-				User:      User{Id: uuid.New()},
+				User:      User{ID: uuid.New()},
 				ExpiresIn: time.Now().Add(-time.Hour).Unix(),
 				RegisteredClaims: jwt.RegisteredClaims{
 					ExpiresAt: jwt.NewNumericDate(time.Now().Add(-time.Hour)),
@@ -219,7 +219,7 @@ func TestVerifyAndParse(t *testing.T) {
 		{
 			name: "Valid Token",
 			claim: &UserClaim{
-				User:      User{Id: uuid.New()},
+				User:      User{ID: uuid.New()},
 				ExpiresIn: now.Add(time.Hour).Unix(),
 			},
 			expectErr:    false,
@@ -228,7 +228,7 @@ func TestVerifyAndParse(t *testing.T) {
 		{
 			name: "Expired Token",
 			claim: &UserClaim{
-				User:      User{Id: uuid.New()},
+				User:      User{ID: uuid.New()},
 				ExpiresIn: now.Add(-time.Hour).Unix(),
 			},
 			expectErr:    true,
@@ -237,7 +237,7 @@ func TestVerifyAndParse(t *testing.T) {
 		{
 			name: "Invalid Claims",
 			claim: &UserClaim{
-				User:      User{Id: uuid.Nil},
+				User:      User{ID: uuid.Nil},
 				ExpiresIn: now.Add(-time.Hour).Unix(),
 			},
 			expectErr:    true,
@@ -246,7 +246,7 @@ func TestVerifyAndParse(t *testing.T) {
 		{
 			name: "Invalid Claims And Valid Token",
 			claim: &UserClaim{
-				User:      User{Id: uuid.Nil},
+				User:      User{ID: uuid.Nil},
 				ExpiresIn: now.Add(time.Hour).Unix(),
 				RegisteredClaims: jwt.RegisteredClaims{
 					ExpiresAt: jwt.NewNumericDate(now.Add(time.Hour)),
@@ -287,7 +287,7 @@ func TestGetClaims(t *testing.T) {
 	}
 
 	userClaim := &UserClaim{
-		User:      User{Id: uuid.New()},
+		User:      User{ID: uuid.New()},
 		ExpiresIn: time.Now().Add(time.Hour).Unix(),
 	}
 	tokenString, _ := jwtInstance.Sign(userClaim)
@@ -341,7 +341,7 @@ func TestRefresh(t *testing.T) {
 		{
 			name: "Default",
 			claim: &UserClaim{
-				User:      User{Id: uuid.New()},
+				User:      User{ID: uuid.New()},
 				ExpiresIn: time.Now().Add(time.Hour).Unix(),
 				RegisteredClaims: jwt.RegisteredClaims{
 					ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
@@ -350,9 +350,9 @@ func TestRefresh(t *testing.T) {
 			expectErr: false,
 		},
 		{
-			name: "Invalid Id",
+			name: "Invalid ID",
 			claim: &UserClaim{
-				User:      User{Id: uuid.Nil},
+				User:      User{ID: uuid.Nil},
 				ExpiresIn: time.Now().Add(time.Hour).Unix(),
 				RegisteredClaims: jwt.RegisteredClaims{
 					ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
@@ -363,7 +363,7 @@ func TestRefresh(t *testing.T) {
 		{
 			name: "Expired",
 			claim: &UserClaim{
-				User:      User{Id: uuid.New()},
+				User:      User{ID: uuid.New()},
 				ExpiresIn: time.Now().Add(-time.Hour).Unix(),
 				RegisteredClaims: jwt.RegisteredClaims{
 					ExpiresAt: jwt.NewNumericDate(time.Now().Add(-time.Hour)),
@@ -398,7 +398,7 @@ func TestExpire(t *testing.T) {
 		{
 			name: "Default",
 			claim: &UserClaim{
-				User:      User{Id: uuid.New()},
+				User:      User{ID: uuid.New()},
 				ExpiresIn: time.Now().Add(time.Hour).Unix(),
 				RegisteredClaims: jwt.RegisteredClaims{
 					ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
@@ -407,9 +407,9 @@ func TestExpire(t *testing.T) {
 			expectErr: false,
 		},
 		{
-			name: "Invalid Id",
+			name: "Invalid ID",
 			claim: &UserClaim{
-				User:      User{Id: uuid.Nil},
+				User:      User{ID: uuid.Nil},
 				ExpiresIn: time.Now().Add(time.Hour).Unix(),
 				RegisteredClaims: jwt.RegisteredClaims{
 					ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
@@ -420,7 +420,7 @@ func TestExpire(t *testing.T) {
 		{
 			name: "Expired",
 			claim: &UserClaim{
-				User:      User{Id: uuid.New()},
+				User:      User{ID: uuid.New()},
 				ExpiresIn: time.Now().Add(-time.Hour).Unix(),
 				RegisteredClaims: jwt.RegisteredClaims{
 					ExpiresAt: jwt.NewNumericDate(time.Now().Add(-time.Hour)),
@@ -450,7 +450,7 @@ func TestParseWithInvalidKey(t *testing.T) {
 		t.Fatal(err)
 	}
 	userClaim := &UserClaim{
-		User:      User{Id: uuid.New()},
+		User:      User{ID: uuid.New()},
 		ExpiresIn: time.Now().Add(time.Hour).Unix(), // Valid token
 	}
 	_, _ = jwtInstance.Sign(userClaim)

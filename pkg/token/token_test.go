@@ -61,7 +61,7 @@ func TestToken(t *testing.T) {
 
 	t.Run("GenerateAccessToken", func(t *testing.T) {
 		user := User{
-			Id:    uuid.New(),
+			ID:    uuid.New(),
 			Name:  "Test User",
 			Email: "test@example.com",
 		}
@@ -77,7 +77,7 @@ func TestToken(t *testing.T) {
 
 	t.Run("GenerateRefreshToken", func(t *testing.T) {
 		user := User{
-			Id:    uuid.New(),
+			ID:    uuid.New(),
 			Name:  "Test User",
 			Email: "test@example.com",
 		}
@@ -92,7 +92,7 @@ func TestToken(t *testing.T) {
 	})
 
 	t.Run("TokenParse", func(t *testing.T) {
-		token, err := service.GenerateAccessToken(context.Background(), User{Id: uuid.New()})
+		token, err := service.GenerateAccessToken(context.Background(), User{ID: uuid.New()})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -103,7 +103,7 @@ func TestToken(t *testing.T) {
 	})
 
 	t.Run("TokenVerify", func(t *testing.T) {
-		token, err := service.GenerateAccessToken(context.Background(), User{Id: uuid.New()})
+		token, err := service.GenerateAccessToken(context.Background(), User{ID: uuid.New()})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -113,7 +113,7 @@ func TestToken(t *testing.T) {
 	})
 
 	t.Run("TokenVerifyAndParse", func(t *testing.T) {
-		token, err := service.GenerateAccessToken(context.Background(), User{Id: uuid.New()})
+		token, err := service.GenerateAccessToken(context.Background(), User{ID: uuid.New()})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -133,7 +133,7 @@ func TestToken(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		_, err = invalidSrv.generate(&UserClaim{User: User{Id: uuid.New()}})
+		_, err = invalidSrv.generate(&UserClaim{User: User{ID: uuid.New()}})
 		if err == nil {
 			t.Error("generate should return an error with invalid service, but didn't")
 		}

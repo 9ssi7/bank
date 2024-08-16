@@ -91,7 +91,7 @@ func (j *Jwt) Verify(ctx context.Context, t string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	if res, ok := token.Claims.(*UserClaim); ok && res.Id != uuid.Nil {
+	if res, ok := token.Claims.(*UserClaim); ok && res.User.ID != uuid.Nil {
 		return true, nil
 	}
 	return false, nil
@@ -102,7 +102,7 @@ func (j *Jwt) VerifyAndParse(ctx context.Context, t string) (*UserClaim, error) 
 	if err != nil {
 		return nil, err
 	}
-	if res, ok := token.Claims.(*UserClaim); ok && res.Id != uuid.Nil {
+	if res, ok := token.Claims.(*UserClaim); ok && res.User.ID != uuid.Nil {
 		return res, nil
 	}
 	return nil, nil
@@ -120,7 +120,7 @@ func (j *Jwt) GetClaims(ctx context.Context, t string) (*UserClaim, error) {
 	if err != nil {
 		return nil, err
 	}
-	if res, ok := token.Claims.(*UserClaim); ok && res.Id != uuid.Nil {
+	if res, ok := token.Claims.(*UserClaim); ok && res.User.ID != uuid.Nil {
 		return res, nil
 	}
 	return nil, nil
@@ -131,7 +131,7 @@ func (j *Jwt) Refresh(ctx context.Context, t string, d time.Duration, nd *jwt.Nu
 	if err != nil {
 		return "", err
 	}
-	if res, ok := token.Claims.(*UserClaim); ok && res.Id != uuid.Nil {
+	if res, ok := token.Claims.(*UserClaim); ok && res.User.ID != uuid.Nil {
 		res.ExpiresIn = time.Now().Add(d).Unix()
 		return j.Sign(res)
 	}
@@ -143,7 +143,7 @@ func (j *Jwt) Expire(ctx context.Context, t string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if res, ok := token.Claims.(*UserClaim); ok && res.Id != uuid.Nil {
+	if res, ok := token.Claims.(*UserClaim); ok && res.User.ID != uuid.Nil {
 		res.ExpiresIn = time.Now().Add(-time.Hour).Unix()
 		res.RegisteredClaims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(-time.Hour))
 		return j.Sign(res)

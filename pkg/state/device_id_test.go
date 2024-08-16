@@ -11,7 +11,7 @@ func TestSetDeviceId(t *testing.T) {
 
 	ctx = SetDeviceId(ctx, deviceId)
 
-	got := ctx.Value(deviceIdKey)
+	got := ctx.Value(DeviceIDKey)
 	if got == nil {
 		t.Errorf("SetDeviceId() did not set deviceId in context")
 	}
@@ -29,7 +29,7 @@ func TestGetDeviceId(t *testing.T) {
 	}{
 		{
 			name: "DeviceIdExists",
-			ctx:  context.WithValue(context.Background(), deviceIdKey, "device123"),
+			ctx:  context.WithValue(context.Background(), DeviceIDKey, "device123"),
 			want: "device123",
 		},
 		{
@@ -39,7 +39,7 @@ func TestGetDeviceId(t *testing.T) {
 		},
 		{
 			name: "WrongTypeInContext",
-			ctx:  context.WithValue(context.Background(), deviceIdKey, 123),
+			ctx:  context.WithValue(context.Background(), DeviceIDKey, 123),
 			want: "",
 		},
 	}

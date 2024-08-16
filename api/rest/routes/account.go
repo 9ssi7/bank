@@ -14,7 +14,7 @@ import (
 
 type AccountRoutes struct {
 	Tracer         trace.Tracer
-	ValidationSrv  validation.Srv
+	ValidationSrv  *validation.Srv
 	AccountUseCase *usecase.AccountUseCase
 	Rest           *restsrv.Srv
 }

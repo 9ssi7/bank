@@ -1,6 +1,7 @@
 package rpc
 
 import (
+	"context"
 	"net"
 
 	"github.com/9ssi7/bank/api/rpc/middlewares"
@@ -84,7 +85,8 @@ func (s *Server) Listen() error {
 	return nil
 }
 
-func (s *Server) Shutdown() error {
+func (s *Server) Shutdown(ctx context.Context) error {
+	_ = ctx
 	s.srv.GracefulStop()
 	return nil
 }

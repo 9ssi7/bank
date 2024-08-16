@@ -14,7 +14,7 @@ import (
 
 type AuthRoutes struct {
 	Tracer        trace.Tracer
-	ValidationSrv validation.Srv
+	ValidationSrv *validation.Srv
 	AuthUseCase   *usecase.AuthUseCase
 	Rest          *restsrv.Srv
 	Domain        string

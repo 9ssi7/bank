@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/9ssi7/gopre/pkg/retry"
+	"github.com/9ssi7/bank/pkg/retry"
 )
 
 type retryFuncTestCase struct {

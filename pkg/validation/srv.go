@@ -2,10 +2,11 @@ package validation
 
 import (
 	"context"
+	"errors"
 	"strings"
 
-	"github.com/9ssi7/gopre/pkg/rescode"
-	"github.com/9ssi7/gopre/pkg/state"
+	"github.com/9ssi7/bank/pkg/rescode"
+	"github.com/9ssi7/bank/pkg/state"
 	"github.com/go-playground/locales/en"
 	"github.com/go-playground/locales/tr"
 	ut "github.com/go-playground/universal-translator"
@@ -34,7 +35,7 @@ func New() *Srv {
 
 // ValidateStruct validates the given struct.
 func (s *Srv) ValidateStruct(ctx context.Context, sc interface{}) error {
-	var errors []*ErrorResponse
+	var errs []*ErrorResponse
 	translator := s.getTranslator(ctx)
 	err := s.validator.StructCtx(ctx, sc)
 	if err != nil {
@@ -47,18 +48,18 @@ func (s *Srv) ValidateStruct(ctx context.Context, sc interface{}) error {
 			element.Field = err.Field()
 			element.Value = err.Value()
 			element.Message = err.Translate(translator)
-			errors = append(errors, &element)
+			errs = append(errs, &element)
 		}
 	}
-	if len(errors) > 0 {
-		return rescode.ValidationFailed(nil).SetData(errors)
+	if len(errs) > 0 {
+		return rescode.ValidationFailed(errors.New("validation failed")).SetData(errs)
 	}
 	return nil
 }
 
 // ValidateMap validates the giveb struct.
 func (s *Srv) ValidateMap(ctx context.Context, m map[string]interface{}, rules map[string]interface{}) error {
-	var errors []*ErrorResponse
+	var errs []*ErrorResponse
 	errMap := s.validator.ValidateMapCtx(ctx, m, rules)
 	translator := s.getTranslator(ctx)
 	for key, err := range errMap {
@@ -72,13 +73,13 @@ func (s *Srv) ValidateMap(ctx context.Context, m map[string]interface{}, rules m
 				}
 				element.Value = err.Value()
 				element.Message = err.Translate(translator)
-				errors = append(errors, &element)
+				errs = append(errs, &element)
 			}
 			continue
 		}
 	}
-	if len(errors) > 0 {
-		return rescode.ValidationFailed(nil).SetData(errors)
+	if len(errs) > 0 {
+		return rescode.ValidationFailed(errors.New("validation failed")).SetData(errs)
 	}
 	return nil
 }

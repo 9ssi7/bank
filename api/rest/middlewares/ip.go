@@ -1,6 +1,8 @@
 package middlewares
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"github.com/gofiber/fiber/v2"
+)
 
 func IpAddr(c *fiber.Ctx) error {
 	ip := c.Get("CF-Connecting-IP") // this for Cloudflare origin server proxy, keeper of the IP

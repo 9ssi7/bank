@@ -35,6 +35,8 @@ start-srv:
 stop-srv:
 	docker service rm 9ssi7bank
 
+restart-srv: build-srv stop-srv start-srv	
+
 once: jwt jwt-register network
 
 born: once compose

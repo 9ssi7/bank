@@ -1,7 +1,6 @@
 package restsrv
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
@@ -12,6 +11,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
+	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/gofiber/fiber/v2/middleware/timeout"
 	"github.com/mileusna/useragent"
 	"go.opentelemetry.io/otel/trace"
@@ -43,12 +43,17 @@ func New(cnf Config) *Srv {
 	}
 }
 
+func (s Srv) Recover() fiber.Handler {
+	return recover.New(recover.Config{
+		EnableStackTrace: true,
+	})
+}
+
 func (s Srv) ErrorHandler() fiber.ErrorHandler {
 	return func(c *fiber.Ctx, err error) error {
 		code := fiber.StatusBadRequest
 		if res, ok := err.(*rescode.RC); ok {
 			msg := res.Message
-			fmt.Println("Error:", res.OriginalError().Error())
 			return c.Status(res.StatusCode).JSON(res.JSON(msg))
 		}
 		if e, ok := err.(*fiber.Error); ok {

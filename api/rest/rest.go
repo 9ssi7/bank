@@ -98,7 +98,7 @@ func (s *Server) Listen() error {
 	if err != nil {
 		return err
 	}
-	s.app.Use(s.srv.Cors(), s.srv.IpAddr())
+	s.app.Use(s.srv.Recover(), s.srv.Cors(), s.srv.IpAddr())
 	s.app.Use(otelfiber.Middleware(otelfiber.WithServerName("banking"), otelfiber.WithCollectClientIP(true)))
 	s.app.Use(middlewares.Metric(durationM, reqM, s.tracer))
 	s.app.Use(s.srv.DeviceId())

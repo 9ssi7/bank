@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/9ssi7/gopre/pkg/rescode" // Update with your package path
+	"github.com/9ssi7/bank/pkg/rescode" // Update with your package path
 	// Update with your package path
 	"github.com/google/uuid"
 )

@@ -1,5 +1,16 @@
 package config
 
+import (
+	"os"
+	"path/filepath"
+
+	"gopkg.in/yaml.v3"
+)
+
+var (
+	FilePath string = "./config.yaml"
+)
+
 type Database struct {
 	Host    string `yaml:"host"`
 	Port    string `yaml:"port"`
@@ -54,6 +65,7 @@ type Rpc struct {
 	Host   string `yaml:"host"`
 	Port   string `yaml:"port"`
 	Domain string `yaml:"domain"`
+	UseSSL bool   `yaml:"use_ssl"`
 }
 
 type I18n struct {
@@ -71,4 +83,20 @@ type App struct {
 	Rpc       Rpc         `yaml:"rpc"`
 	Turnstile Turnstile   `yaml:"turnstile"`
 	I18n      I18n        `yaml:"i18n"`
+}
+
+func Bind(v interface{}) error {
+	filename, err := filepath.Abs(FilePath)
+	if err != nil {
+		return err
+	}
+	cleanedDst := filepath.Clean(filename)
+	yamlFile, err := os.ReadFile(cleanedDst)
+	if err != nil {
+		return err
+	}
+	if err := yaml.Unmarshal(yamlFile, v); err != nil {
+		return err
+	}
+	return nil
 }

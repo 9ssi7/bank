@@ -1,6 +1,15 @@
+test:
+	go test -v ./...
+
+test-cover:
+	go test ./... -coverprofile=./cover.out -covermode=atomic -coverpkg=./...
+	go tool cover -html cover.out -o cover.html
 
 proto:
 	protoc --go_out=. --go-grpc_out=.  api/rpc/protos/*.proto
+
+config:
+	cp deployments/config.yaml.example deployments/config.yaml
 
 jwt-key:
 	ssh-keygen -t rsa -b 4096 -m PEM -f ./tmp/bank_jwtRS256.key
@@ -30,14 +39,14 @@ build-srv:
 	docker build -t github.com/9ssi7/bank:latest .
 
 start-srv:
-	docker service create --name 9ssi7bank --publish 4000:4000 --publish 5000:5000 --secret bank_private_key --secret bank_public_key --replicas 3 --mount type=bind,source=./deployments/config.yaml,target=/config.yaml --network bank github.com/9ssi7/bank:latest
+	docker service create --name 9ssi7bank --secret bank_private_key --secret bank_public_key --replicas 3 --mount type=bind,source=./deployments/config.yaml,target=/config.yaml --network bank --publish published=4000,target=4000,protocol=tcp --publish published=50051,target=50051,protocol=tcp github.com/9ssi7/bank:latest
 
 stop-srv:
 	docker service rm 9ssi7bank
 
 restart-srv: build-srv stop-srv start-srv	
 
-once: jwt jwt-register network
+once: config jwt jwt-register network
 
 born: once compose
 
@@ -55,4 +64,4 @@ clean-docker:
 	docker rmi github.com/9ssi7/bank:latest
 	docker rmi github.com/9ssi7/bank:dev
 
-.PHONY: proto jwt-key jwt-pub jwt jwt-register compose compose-build compose-down network build-srv start-srv stop-srv build-srv-dev run-srv-dev once born dev clean clean-docker
+.PHONY: proto jwt-key jwt-pub jwt jwt-register compose compose-build compose-down network build-srv start-srv stop-srv build-srv-dev run-srv-dev once born dev clean clean-docker test test-cover config

@@ -1,5 +1,7 @@
 package rescode
 
+import "google.golang.org/grpc/codes"
+
 // any is a type alias for interface{}.
 // It is used to store any type of data.
 type R map[string]interface{}
@@ -14,8 +16,11 @@ type RC struct {
 	// Message is the message of the error.
 	Message string
 
-	// StatusCode is the http/rpc status code of the error.
-	StatusCode int
+	// HttpCode is the status code of the error.
+	HttpCode int
+
+	// RpcCode is the rpc status code of the error.
+	RpcCode codes.Code
 
 	// Data is the data of the error.
 	Data any
@@ -27,18 +32,19 @@ type RC struct {
 type RcCreator func(err error) *RC
 
 // New is a function to create a new RC.
-func New(code uint64, status int, message string, data ...any) RcCreator {
+func New(code uint64, hCode int, rCode codes.Code, message string, data ...any) RcCreator {
 	var d any
 	if len(data) > 0 {
 		d = data[0]
 	}
 	return func(err error) *RC {
 		return &RC{
-			Code:       code,
-			Message:    message,
-			Data:       d,
-			StatusCode: status,
-			err:        err,
+			Code:     code,
+			RpcCode:  rCode,
+			Message:  message,
+			Data:     d,
+			HttpCode: hCode,
+			err:      err,
 		}
 	}
 }

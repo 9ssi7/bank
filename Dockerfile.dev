@@ -11,4 +11,7 @@ COPY . .
 
 RUN go install github.com/air-verse/air@latest
 
+EXPOSE 4000
+EXPOSE 50051
+
 CMD ["air", "--build.cmd", "go build -o .temp/main ./cmd/main.go", "--build.bin", "./.temp/main"]

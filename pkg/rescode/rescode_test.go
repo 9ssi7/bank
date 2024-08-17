@@ -3,49 +3,55 @@ package rescode
 import (
 	"errors"
 	"testing"
+
+	"google.golang.org/grpc/codes"
 )
 
 func TestNew(t *testing.T) {
 	tests := []struct {
-		name    string
-		code    uint64
-		status  int
-		message string
-		data    any
-		err     error
-		want    *RC
+		name     string
+		code     uint64
+		httpCode int
+		rpcCode  codes.Code
+		message  string
+		data     any
+		err      error
+		want     *RC
 	}{
 		{
-			name:    "Basic",
-			code:    100,
-			status:  200,
-			message: "Success",
-			want:    &RC{Code: 100, Message: "Success", StatusCode: 200},
+			name:     "Basic",
+			code:     100,
+			httpCode: 200,
+			rpcCode:  codes.OK,
+			message:  "Success",
+			want:     &RC{Code: 100, Message: "Success", HttpCode: 200},
 		},
 		{
-			name:    "WithData",
-			code:    101,
-			status:  201,
-			message: "Created",
-			data:    map[string]string{"foo": "bar"},
-			want:    &RC{Code: 101, Message: "Created", StatusCode: 201, Data: map[string]string{"foo": "bar"}},
+			name:     "WithData",
+			code:     101,
+			httpCode: 201,
+			rpcCode:  codes.OK,
+			message:  "Created",
+			data:     map[string]string{"foo": "bar"},
+			want:     &RC{Code: 101, Message: "Created", HttpCode: 201, Data: map[string]string{"foo": "bar"}},
 		},
 		{
-			name:    "WithError",
-			code:    500,
-			status:  500,
-			message: "Internal Server Error",
-			err:     errors.New("database error"),
-			want:    &RC{Code: 500, Message: "Internal Server Error", StatusCode: 500, err: errors.New("database error")},
+			name:     "WithError",
+			code:     500,
+			httpCode: 500,
+			rpcCode:  codes.Internal,
+			message:  "Internal Server Error",
+			err:      errors.New("database error"),
+			want:     &RC{Code: 500, Message: "Internal Server Error", HttpCode: 500, err: errors.New("database error")},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			creator := New(tt.code, tt.status, tt.message, tt.data)
+			creator := New(tt.code, tt.httpCode, tt.rpcCode, tt.message, tt.data)
 			rc := creator(tt.err)
 
-			if rc.Code != tt.want.Code || rc.Message != tt.want.Message || rc.StatusCode != tt.want.StatusCode {
+			if rc.Code != tt.want.Code || rc.Message != tt.want.Message || rc.HttpCode != tt.want.HttpCode {
 				t.Errorf("New() = %v, want %v", rc, tt.want)
 			}
 

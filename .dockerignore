@@ -3,6 +3,7 @@
 tmp/*
 .dockerignore
 .gitignore
+cover.out
 LICENSE
 Makefile
 README.md

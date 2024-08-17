@@ -7,7 +7,6 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"sync"
 	"time"
 
@@ -26,8 +25,6 @@ import (
 	"github.com/9ssi7/bank/pkg/token"
 	"github.com/9ssi7/bank/pkg/validation"
 	"github.com/redis/go-redis/v9"
-
-	"gopkg.in/yaml.v3"
 )
 
 var once sync.Once
@@ -117,7 +114,6 @@ func main() {
 	}()
 	go func() {
 		defer wg.Done()
-
 		if err := rpcSrv.Listen(); err != nil {
 			log.Fatalf("failed to start rpc server: %v", err)
 		}
@@ -138,14 +134,8 @@ func main() {
 }
 
 func (a *app) loadConfig() error {
-	filename, _ := filepath.Abs("./config.yaml")
-	cleanedDst := filepath.Clean(filename)
-	yamlFile, err := os.ReadFile(cleanedDst)
-	if err != nil {
-		return err
-	}
 	var configs config.App
-	if err := yaml.Unmarshal(yamlFile, &configs); err != nil {
+	if err := config.Bind(&configs); err != nil {
 		return err
 	}
 	a.cnf = &configs

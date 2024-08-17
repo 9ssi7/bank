@@ -15,11 +15,12 @@ RUN --mount=type=cache,target=/go/pkg/mod \
 
 FROM scratch
 
-ENV PORT 4000
+ENV HTTP_PORT=4000
+ENV RPC_PORT=50051
 
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /main .
 COPY --from=builder /assets ./assets
-EXPOSE $PORT
+EXPOSE $HTTP_PORT $RPC_PORT
 
 CMD ["/main"]

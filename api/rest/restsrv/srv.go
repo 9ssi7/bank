@@ -54,7 +54,7 @@ func (s Srv) ErrorHandler() fiber.ErrorHandler {
 		code := fiber.StatusBadRequest
 		if res, ok := err.(*rescode.RC); ok {
 			msg := res.Message
-			return c.Status(res.StatusCode).JSON(res.JSON(msg))
+			return c.Status(res.HttpCode).JSON(res.JSON(msg))
 		}
 		if e, ok := err.(*fiber.Error); ok {
 			code = e.Code

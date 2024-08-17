@@ -4,6 +4,7 @@ import (
 	"context"
 
 	authpb "github.com/9ssi7/bank/api/rpc/generated/auth/v1"
+	"github.com/9ssi7/bank/api/rpc/rpcres"
 	"github.com/9ssi7/bank/internal/usecase"
 	"github.com/9ssi7/bank/pkg/agent"
 	"github.com/9ssi7/bank/pkg/validation"
@@ -20,9 +21,7 @@ type AuthRoutes struct {
 }
 
 func (r *AuthRoutes) ProtectedRoutes() []string {
-	return []string{
-		"/auth.Auth/LoginVerify",
-	}
+	return protectedActions(authpb.Auth_ServiceDesc.ServiceName, "RefreshToken")
 }
 
 func (r *AuthRoutes) RegisterRouter(s *grpc.Server) {
@@ -40,7 +39,7 @@ func (r *AuthRoutes) LoginStart(ctx context.Context, req *authpb.LoginStartReque
 		},
 	})
 	if err != nil {
-		return nil, err
+		return nil, rpcres.Error(err)
 	}
 	return &authpb.LoginStartResponse{
 		Token: *res,
@@ -52,7 +51,7 @@ func (r *AuthRoutes) LoginVerify(ctx context.Context, req *authpb.LoginVerifyReq
 		VerifyToken: req.Token,
 	})
 	if err != nil {
-		return nil, err
+		return nil, rpcres.Error(err)
 	}
 	return &authpb.LoginVerifyResponse{}, nil
 }

@@ -1,5 +1,5 @@
 syntax = "proto3";
-package com.ssibank.Auth.v1;
+package ssibank.v1;
 option go_package = "./api/rpc/generated/auth/v1";
 
 message Device {

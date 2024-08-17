@@ -7,11 +7,12 @@ import (
 	"github.com/9ssi7/bank/pkg/rescode"
 	"github.com/9ssi7/turnstile"
 	"github.com/gofiber/fiber/v2"
+	"google.golang.org/grpc/codes"
 )
 
 var (
-	recaptchaFailed   = rescode.New(4040, http.StatusForbidden, "recaptcha failed")
-	recaptchaRequired = rescode.New(4041, http.StatusForbidden, "recaptcha required")
+	recaptchaFailed   = rescode.New(4040, http.StatusForbidden, codes.Internal, "recaptcha failed")
+	recaptchaRequired = rescode.New(4041, http.StatusForbidden, codes.Unauthenticated, "recaptcha required")
 )
 
 func NewTurnstile(secret string, skip bool) fiber.Handler {

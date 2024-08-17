@@ -15,6 +15,7 @@ require (
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/google/uuid v1.6.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
+	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.1.0
 	github.com/lib/pq v1.10.9
 	github.com/mileusna/useragent v1.3.4
 	github.com/nats-io/nats.go v1.36.0
@@ -32,7 +33,7 @@ require (
 	go.opentelemetry.io/otel/sdk v1.28.0
 	go.opentelemetry.io/otel/sdk/metric v1.28.0
 	go.opentelemetry.io/otel/trace v1.28.0
-	google.golang.org/grpc v1.64.1
+	google.golang.org/grpc v1.65.0
 	google.golang.org/protobuf v1.34.2
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -44,7 +45,7 @@ require (
 	github.com/Microsoft/hcsshim v0.11.5 // indirect
 	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
-	github.com/cespare/xxhash/v2 v2.2.0 // indirect
+	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/containerd/containerd v1.7.18 // indirect
 	github.com/containerd/errdefs v0.1.0 // indirect
 	github.com/containerd/log v0.1.0 // indirect

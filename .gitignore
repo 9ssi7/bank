@@ -3,3 +3,4 @@ tmp/redis
 tmp/db
 tmp/bank_jwtRS256.key.pub
 tmp/bank_jwtRS256.key
+cover.out

@@ -6,11 +6,12 @@ import (
 
 	"github.com/9ssi7/bank/pkg/rescode"
 	"github.com/gofiber/fiber/v2"
+	"google.golang.org/grpc/codes"
 )
 
 var (
-	requiredVerifyToken = rescode.New(4042, fiber.StatusForbidden, "verify required")
-	excludedVerifyToken = rescode.New(4043, fiber.StatusForbidden, "verify excluded")
+	requiredVerifyToken = rescode.New(4042, fiber.StatusForbidden, codes.Unauthenticated, "verify required")
+	excludedVerifyToken = rescode.New(4043, fiber.StatusForbidden, codes.Unavailable, "verify excluded")
 )
 
 func VerifyRequired(ctx *fiber.Ctx) error {

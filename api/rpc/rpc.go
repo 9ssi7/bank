@@ -64,15 +64,23 @@ func (s *Server) Listen() error {
 	if err != nil {
 		return err
 	}
+	fmt.Printf("rpc server listening on port %s\n", s.port)
 	s.srv = grpc.NewServer(
 		grpc.StatsHandler(otelgrpc.NewServerHandler()),
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
 			grpc_recovery.UnaryServerInterceptor(),
 			grpc_ctxtags.UnaryServerInterceptor(),
-			grpc_recovery.UnaryServerInterceptor(),
 			grpc_opentracing.UnaryServerInterceptor(),
-			middlewares.NewMetric(durationM, reqM, s.t),
+			middlewares.UnaryServerMetric(durationM, reqM, s.t),
 		)),
+		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
+			grpc_recovery.StreamServerInterceptor(),
+			grpc_ctxtags.StreamServerInterceptor(),
+			grpc_opentracing.StreamServerInterceptor(),
+			middlewares.StreamServerMetric(durationM, reqM, s.t),
+		)),
+		grpc.MaxRecvMsgSize(1024*1024*1024),
+		grpc.MaxSendMsgSize(1024*1024*1024),
 	)
 
 	auth := routes.AuthRoutes{
@@ -82,7 +90,6 @@ func (s *Server) Listen() error {
 		Domain:        s.domain,
 	}
 	auth.RegisterRouter(s.srv)
-
 	if err := s.srv.Serve(lis); err != nil {
 		return err
 	}

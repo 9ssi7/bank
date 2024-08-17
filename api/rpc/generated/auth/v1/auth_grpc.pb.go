@@ -39,7 +39,7 @@ func NewAuthClient(cc grpc.ClientConnInterface) AuthClient {
 
 func (c *authClient) LoginStart(ctx context.Context, in *LoginStartRequest, opts ...grpc.CallOption) (*LoginStartResponse, error) {
 	out := new(LoginStartResponse)
-	err := c.cc.Invoke(ctx, "/com.ssibank.Auth.v1.Auth/LoginStart", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/ssibank.v1.Auth/LoginStart", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +48,7 @@ func (c *authClient) LoginStart(ctx context.Context, in *LoginStartRequest, opts
 
 func (c *authClient) LoginVerify(ctx context.Context, in *LoginVerifyRequest, opts ...grpc.CallOption) (*LoginVerifyResponse, error) {
 	out := new(LoginVerifyResponse)
-	err := c.cc.Invoke(ctx, "/com.ssibank.Auth.v1.Auth/LoginVerify", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/ssibank.v1.Auth/LoginVerify", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +57,7 @@ func (c *authClient) LoginVerify(ctx context.Context, in *LoginVerifyRequest, op
 
 func (c *authClient) RefreshToken(ctx context.Context, in *RefreshTokenRequest, opts ...grpc.CallOption) (*RefreshTokenResponse, error) {
 	out := new(RefreshTokenResponse)
-	err := c.cc.Invoke(ctx, "/com.ssibank.Auth.v1.Auth/RefreshToken", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/ssibank.v1.Auth/RefreshToken", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +66,7 @@ func (c *authClient) RefreshToken(ctx context.Context, in *RefreshTokenRequest, 
 
 func (c *authClient) Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error) {
 	out := new(RegisterResponse)
-	err := c.cc.Invoke(ctx, "/com.ssibank.Auth.v1.Auth/Register", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/ssibank.v1.Auth/Register", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +75,7 @@ func (c *authClient) Register(ctx context.Context, in *RegisterRequest, opts ...
 
 func (c *authClient) RegistrationVerify(ctx context.Context, in *RegistrationVerifyRequest, opts ...grpc.CallOption) (*RegistrationVerifyResponse, error) {
 	out := new(RegistrationVerifyResponse)
-	err := c.cc.Invoke(ctx, "/com.ssibank.Auth.v1.Auth/RegistrationVerify", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/ssibank.v1.Auth/RegistrationVerify", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +136,7 @@ func _Auth_LoginStart_Handler(srv interface{}, ctx context.Context, dec func(int
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/com.ssibank.Auth.v1.Auth/LoginStart",
+		FullMethod: "/ssibank.v1.Auth/LoginStart",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AuthServer).LoginStart(ctx, req.(*LoginStartRequest))
@@ -154,7 +154,7 @@ func _Auth_LoginVerify_Handler(srv interface{}, ctx context.Context, dec func(in
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/com.ssibank.Auth.v1.Auth/LoginVerify",
+		FullMethod: "/ssibank.v1.Auth/LoginVerify",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AuthServer).LoginVerify(ctx, req.(*LoginVerifyRequest))
@@ -172,7 +172,7 @@ func _Auth_RefreshToken_Handler(srv interface{}, ctx context.Context, dec func(i
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/com.ssibank.Auth.v1.Auth/RefreshToken",
+		FullMethod: "/ssibank.v1.Auth/RefreshToken",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AuthServer).RefreshToken(ctx, req.(*RefreshTokenRequest))
@@ -190,7 +190,7 @@ func _Auth_Register_Handler(srv interface{}, ctx context.Context, dec func(inter
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/com.ssibank.Auth.v1.Auth/Register",
+		FullMethod: "/ssibank.v1.Auth/Register",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AuthServer).Register(ctx, req.(*RegisterRequest))
@@ -208,7 +208,7 @@ func _Auth_RegistrationVerify_Handler(srv interface{}, ctx context.Context, dec 
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/com.ssibank.Auth.v1.Auth/RegistrationVerify",
+		FullMethod: "/ssibank.v1.Auth/RegistrationVerify",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AuthServer).RegistrationVerify(ctx, req.(*RegistrationVerifyRequest))
@@ -220,7 +220,7 @@ func _Auth_RegistrationVerify_Handler(srv interface{}, ctx context.Context, dec 
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Auth_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "com.ssibank.Auth.v1.Auth",
+	ServiceName: "ssibank.v1.Auth",
 	HandlerType: (*AuthServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
